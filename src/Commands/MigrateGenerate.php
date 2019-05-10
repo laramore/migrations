@@ -11,7 +11,7 @@
 namespace Laramore\Commands;
 
 use Illuminate\Console\Command;
-use Laramore\MigrationManager;
+use Laramore\Migrations\Manager;
 
 class MigrateGenerate extends Command
 {
@@ -32,6 +32,6 @@ class MigrateGenerate extends Command
      */
     public function handle()
     {
-        (new MigrationManager())->generateMigrations();
+        (new Manager())->generateMigrations();
     }
 }
