@@ -46,4 +46,9 @@ class Command
     {
         return $this->properties;
     }
+
+    public function getField()
+    {
+        return $this->getTableName().'.'.$this->getAttname();
+    }
 }

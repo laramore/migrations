@@ -15,7 +15,7 @@ use Laramore\Meta;
 class Contraint
 {
     protected $meta;
-    protected $tableNames;
+    protected $tableName;
     protected $needs;
     protected $command;
 
@@ -24,9 +24,7 @@ class Contraint
         // $this->meta = $meta;
         $this->needs = $needs;
         $this->command = new Command($meta, $attname, $properties);
-        $this->tableNames = array_unique(array_map(function ($need) {
-            return $need['table'];
-        }, $needs));
+        $this->tableName = $this->command->getTableName();
     }
 
     public function getNodes()
@@ -34,14 +32,19 @@ class Contraint
         return $this->nodes;
     }
 
-    public function getTableNames()
+    public function getTableName()
     {
-        return $this->tableNames;
+        return $this->tableName;
     }
 
     public function getAttname()
     {
         return $this->attname;
+    }
+
+    public function getCommand()
+    {
+        return $this->command;
     }
 
     public function getFields(): array

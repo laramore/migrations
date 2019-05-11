@@ -52,7 +52,7 @@ class Manager
         }
 
         $this->wantedNodes = new Node($wantedNodes);
-        $this->wantedNodes->organize();
+        $this->wantedNodes->organize()->optimize();
     }
 
     protected function getFieldsFromNodes(array $nodes)
