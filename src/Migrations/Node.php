@@ -44,13 +44,9 @@ class Node
         $this->organized = false;
         $this->optimized = false;
 
-        if (is_array($nodes) && count($nodes) === 1) {
-            $this->nodes = $nodes[0];
-        } else {
-            $this->nodes = $nodes;
-        }
+        $this->nodes = $nodes;
 
-        $this->tableNames = $this->loadTableNames($nodes);
+        $this->tableNames = array_values($this->loadTableNames($nodes));
     }
 
     public function getNodes(): array
@@ -167,6 +163,14 @@ class Node
                 $commonTable = $node->getTableName();
             }
         }
+
+        if (!is_null($firstIndex) && $firstIndex !== 0) {
+            $subNodes = array_slice($this->nodes, $firstIndex, $nbrOfNodes - $firstIndex);
+            $packNode = new Node($subNodes);
+
+            $this->removeNodes($firstIndex, $nbrOfNodes);
+            $this->insertNode($packNode->organize()->optimize(), $firstIndex);
+        }
     }
 
     public function organize()
@@ -215,7 +219,7 @@ class Node
                     }
 
                     if (is_null($firstIndex)) {
-                        throw new \Exception('Unexepected error: a required field is not defined');
+                        continue;
                     }
 
                     $this->moveASliceOfNodes($firstIndex, $lastIndex, $i);
