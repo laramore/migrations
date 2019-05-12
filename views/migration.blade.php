@@ -19,7 +19,7 @@ class {{ $name }} extends Migration
      */
     public function up()
     {
-        Schema::create({!! json_encode($table) !!}, function (Blueprint {{ $blueprintVar }}) {
+        Schema::{{ $type }}({!! json_encode($table) !!}, function (Blueprint {{ $blueprintVar }}) {
 @if (count($fields))
             @include('laramore::migration.partials.commands', ['commands' => $fields])
 @endif

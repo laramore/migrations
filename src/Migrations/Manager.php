@@ -103,16 +103,17 @@ class Manager
 
         $data = [
             'date' => now(),
+            'type' => ($type = $metaNode->getType()) === 'update' ? 'table' : $type,
             'model' => $model = $meta->getModelClassName(),
-            'name' => 'Create'.ucfirst($model).'Table',
             'table' => $table = $meta->getTableName(),
+            'name' => ucfirst($type).ucfirst($table).'Table',
             'fields' => $metaNode->getFieldNodes(),
             'contraints' => array_map(function ($contraint) {
                 return $contraint->getCommand();
             }, $metaNode->getContraintNodes()),
         ];
 
-        $this->generateMigrationFile('laramore::migration', $data, $this->path.'/'.date('Y_m_d_').$this->getCounter().'_'.$metaNode->getType().'_'.$table.'.php');
+        $this->generateMigrationFile('laramore::migration', $data, $this->path.'/'.date('Y_m_d_').$this->getCounter().'_'.$type.'_'.$table.'_table.php');
     }
 
     public function clearMigrations()
