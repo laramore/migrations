@@ -21,7 +21,7 @@ class Contraint
 
     public function __construct(Meta $meta, string $attname, array $needs, array $properties)
     {
-        // $this->meta = $meta;
+        $this->meta = $meta;
         $this->needs = $needs;
         $this->command = new Command($meta, $attname, $properties);
         $this->tableName = $this->command->getTableName();

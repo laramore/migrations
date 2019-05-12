@@ -14,6 +14,7 @@ class Node
 {
     protected $nodes = [];
     protected $tableNames = [];
+    protected $tableMetas = [];
     protected $organized = false;
     protected $optimized = false;
 
@@ -59,15 +60,36 @@ class Node
         return $this->tableNames;
     }
 
+    public function getTableMetas(): array
+    {
+        return $this->tableMetas;
+    }
+
     public function getFields(): array
     {
         $fields = [];
 
-        foreach ($this->nodes as $node) {
+        foreach ($this->getNodes() as $node) {
             if ($node instanceof Node) {
                 $fields = array_merge($fields, $node->getFields());
             } else if ($node instanceof Command) {
                 $fields[] = $node->getField();
+            }
+        }
+
+        return array_unique($fields);
+    }
+
+    public function getFieldsAndContraints(): array
+    {
+        $fields = [];
+        foreach ($this->getNodes() as $node) {
+            if ($node instanceof Command) {
+                $fields[] = $node->getField();
+            } else if ($node instanceof Contraint) {
+                $fields[] = $node->getCommand()->getField().'+';
+            } else {
+                $fields = array_merge($fields, $node->getFieldsAndContraints());
             }
         }
 
@@ -83,7 +105,7 @@ class Node
 
     protected function removeNodes(int $firstIndex, int $lastIndex)
     {
-        array_splice($this->nodes, $firstIndex, $lastIndex - $firstIndex);
+        array_splice($this->nodes, $firstIndex, ($lastIndex - $firstIndex));
 
         $this->nodes = array_values($this->nodes);
     }
@@ -126,6 +148,10 @@ class Node
             $node = $this->getNodes()[$i];
 
             if ($node instanceof Node) {
+                if ($node instanceof MetaNode) {
+                    $this->tableMetas[$node->getTableName()] = $node->getMeta();
+                }
+
                 $subNodes = $node->organize()->optimize()->getNodes();
                 $nbrOfNodes += (count($subNodes) - 1);
                 $this->removeNode($i);
@@ -149,15 +175,15 @@ class Node
                 $commonTable = $node->getTableName();
             } else if ($node->getTableName() !== $commonTable) {
                 $lastIndex = $i;
-                $subNodes = array_slice($this->nodes, $firstIndex, $lastIndex - $firstIndex);
-                $packNode = new Node($subNodes);
+                $subNodes = array_slice($this->nodes, $firstIndex, ($lastIndex - $firstIndex));
+                $packNode = new MetaNode($subNodes, $this->tableMetas[$commonTable]);
 
                 // Do not handle the just created node.
-                $i -= count($subNodes) - 1;
-                $nbrOfNodes -= count($subNodes) - 1;
+                $i -= (count($subNodes) - 1);
+                $nbrOfNodes -= (count($subNodes) - 1);
 
                 $this->removeNodes($firstIndex, $lastIndex);
-                $this->insertNode($packNode, $firstIndex);
+                $this->insertNode($packNode->organize()->optimize(), $firstIndex);
 
                 $firstIndex = $i;
                 $commonTable = $node->getTableName();
@@ -165,12 +191,25 @@ class Node
         }
 
         if (!is_null($firstIndex) && $firstIndex !== 0) {
-            $subNodes = array_slice($this->nodes, $firstIndex, $nbrOfNodes - $firstIndex);
-            $packNode = new Node($subNodes);
+            $subNodes = array_slice($this->nodes, $firstIndex, ($nbrOfNodes - $firstIndex));
+            $packNode = new MetaNode($subNodes, $this->tableMetas[$commonTable]);
 
             $this->removeNodes($firstIndex, $nbrOfNodes);
             $this->insertNode($packNode->organize()->optimize(), $firstIndex);
         }
+    }
+
+    protected function contraintCanMove(Contraint $node, int $firstIndex, int $lastIndex)
+    {
+        for ($i = $firstIndex; $i < $lastIndex; $i++) {
+            $nodeToCheck = $this->getNodes()[$i];
+
+            if ($nodeToCheck instanceof Command && in_array($nodeToCheck->getField(), $node->getFields())) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public function organize()
@@ -236,19 +275,6 @@ class Node
         return $this;
     }
 
-    protected function contraintCanMove(Contraint $node, int $firstIndex, int $lastIndex)
-    {
-        for ($i = $firstIndex; $i < $lastIndex; $i++) {
-            $nodeToCheck = $this->getNodes()[$i];
-
-            if ($nodeToCheck instanceof Command && in_array($nodeToCheck->getField(), $node->getFields())) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
     public function optimize()
     {
         if (!$this->organized) {
@@ -311,7 +337,7 @@ class Node
             if ($node instanceof Command) {
                 $movingTable = $node->getTableName();
 
-                for ($j = $nbrOfNodes - 1; $j > $i; $j--) {
+                for ($j = ($nbrOfNodes - 1); $j > $i; $j--) {
                     $nodeToMove = $this->getNodes()[$j];
 
                     if (in_array($nodeToMove, $movedNodes)) {

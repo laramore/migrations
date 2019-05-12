@@ -21,7 +21,7 @@ class Command
 
     public function __construct(Meta $meta, string $attname, array $properties)
     {
-        // $this->meta = $meta;
+        $this->meta = $meta;
         $this->tableName = $meta->getTableName();
         $this->attname = $attname;
         $this->properies = $properties;

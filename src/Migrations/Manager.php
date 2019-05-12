@@ -43,7 +43,7 @@ class Manager
             }
 
             if (count($nodes)) {
-                $wantedNodes[] = new Node($nodes);
+                $wantedNodes[] = new MetaNode($nodes, $meta);
             }
 
             foreach ($meta->getMigrationContraints() as $attname => $data) {
@@ -52,7 +52,11 @@ class Manager
         }
 
         $this->wantedNodes = new Node($wantedNodes);
-        $this->wantedNodes->organize()->optimize();
+        dump($this->wantedNodes->getFieldsAndContraints());
+        $this->wantedNodes->organize();
+        dump($this->wantedNodes->getFieldsAndContraints());
+        $this->wantedNodes->optimize();
+        dd($this->wantedNodes->getFieldsAndContraints());
     }
 
     protected function getFieldsFromNodes(array $nodes)
@@ -100,7 +104,6 @@ class Manager
 
     public function generateMigrations()
     {
-        dump($this->wantedNodes);
         foreach (Meta::getMetas() as $meta) {
             $this->generateMigration($meta);
         }
