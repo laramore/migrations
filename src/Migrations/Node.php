@@ -224,49 +224,29 @@ class Node
         $nbrOfNodes = count($this->getNodes());
 
         for ($i = 0; $i < $nbrOfNodes; $i++) {
-            $node = $this->getNodes()[$i];
+            $nodeToMove = $this->getNodes()[$i];
 
-            if ($node instanceof Contraint) {
-                $neededFields = $node->getFields();
+            if ($nodeToMove instanceof Contraint) {
+                $neededFields = $nodeToMove->getFields();
                 $missingFields = array_diff($neededFields, $fields);
 
                 if (count($missingFields)) {
-                    // We only treat one missing field per turn.
-                    $missingField = $missingFields[0];
-                    [$missingTable, $missingAttname] = explode('.', $missingField);
-
-                    $firstIndex = null;
-                    $lastIndex = null;
-                    $movingTable = null;
-
                     for ($j = ($i + 1); $j < $nbrOfNodes; $j++) {
-                        $nodeToMove = $this->getNodes()[$j];
+                        $nodeToCheck = $this->getNodes()[$j];
 
-                        if (is_null($firstIndex)) {
-                            if ($nodeToMove instanceof Command) {
-                                if ($nodeToMove->getTableName() === $missingTable && $nodeToMove->getAttname() === $missingAttname) {
-                                    $firstIndex = $lastIndex = $j;
-                                    $movingTable = $missingTable;
-                                }
-                            } else if (in_array($missingField, $nodeToMove->getFields())) {
-                                $firstIndex = $lastIndex = $j;
-                                $movingTable = $nodeToMove->getTableName();
+                        if ($nodeToCheck instanceof Command) {
+                            $missingFields = array_diff($missingFields, [$nodeToCheck->getField()]);
+
+                            if (count($missingFields) === 0) {
+                                break;
                             }
-                        } else if ($nodeToMove->getTableName() === $movingTable) {
-                            $lastIndex = $j;
                         }
                     }
 
-                    if (is_null($firstIndex)) {
-                        continue;
-                    }
-
-                    $this->moveASliceOfNodes($firstIndex, $lastIndex, $i);
-
-                    $i = 0;
+                    $this->moveANode($i--, $j - 1);
                 }
             } else {
-                $fields[] = $node->getField();
+                $fields[] = $nodeToMove->getField();
             }
         }
 
