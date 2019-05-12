@@ -218,8 +218,6 @@ class Node
             return $this;
         }
 
-        $this->unpack();
-
         $fields = [];
         $nbrOfNodes = count($this->getNodes());
 
@@ -236,19 +234,49 @@ class Node
 
                         if ($nodeToCheck instanceof Command) {
                             $missingFields = array_diff($missingFields, [$nodeToCheck->getField()]);
+                        } else if ($nodeToCheck instanceof Node) {
+                            $missingFields = array_diff($missingFields, $nodeToCheck->getFields());
+                        }
 
-                            if (count($missingFields) === 0) {
-                                break;
+                        if (count($missingFields) === 0) {
+                            if ($nodeToCheck instanceof Command) {
+                                $groupedTables = [$nodeToCheck->getTableName()];
+                            } else if ($nodeToCheck instanceof Node) {
+                                $groupedTables = $nodeToCheck->getTableNames();
                             }
+
+                            for ($k = $j; $k < $nbrOfNodes; $k++) {
+                                $nodeNotToIsolate = $this->getNodes()[$k];
+
+                                if ($nodeNotToIsolate instanceof Command) {
+                                    $tables = [$nodeNotToIsolate->getTableName()];
+                                } else if ($nodeNotToIsolate instanceof Node) {
+                                    $tables = $nodeNotToIsolate->getTableNames();
+                                }
+
+                                if (!count(array_intersect($groupedTables, $tables))) {
+                                    break;
+                                }
+
+                                $j = $k;
+                            }
+
+                            break;
                         }
                     }
 
-                    $this->moveANode($i--, $j - 1);
+                    $this->moveANode($i--, $j);
                 }
             } else {
-                $fields[] = $nodeToMove->getField();
+                if ($nodeToMove instanceof Command) {
+                    $fields[] = $nodeToMove->getField();
+                } else if ($nodeToMove instanceof Node) {
+                    $fields = array_merge($fields, $nodeToMove->getFields());
+                }
             }
         }
+
+        $this->unpack();
 
         $this->organized = true;
 
@@ -335,6 +363,30 @@ class Node
                             $this->moveANode($j, $i);
                             $movedNodes[] = $nodeToMove;
                             $j++;
+                        }
+                    }
+                }
+            }
+        }
+
+        for ($i = ($nbrOfNodes - 1); $i > 0; $i--) {
+            $node = $this->getNodes()[$i];
+            $movedNodes = [];
+
+            if ($node instanceof Contraint) {
+                $movingTable = $node->getTableName();
+
+                for ($j = 0; $j <= $i; $j++) {
+                    $nodeToMove = $this->getNodes()[$j];
+
+                    if (in_array($nodeToMove, $movedNodes)) {
+                        continue;
+                    }
+
+                    if ($nodeToMove instanceof Contraint) {
+                        if ($nodeToMove->getTableName() === $movingTable) {
+                            $this->moveANode($j, $i);
+                            $movedNodes[] = $nodeToMove;
                         }
                     }
                 }

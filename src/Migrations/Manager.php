@@ -52,11 +52,7 @@ class Manager
         }
 
         $this->wantedNodes = new Node($wantedNodes);
-        dump($this->wantedNodes->getFieldsAndContraints());
-        $this->wantedNodes->organize();
-        dump($this->wantedNodes->getFieldsAndContraints());
-        $this->wantedNodes->optimize();
-        dd($this->wantedNodes->getFieldsAndContraints());
+        $this->wantedNodes->organize()->optimize();
     }
 
     protected function getFieldsFromNodes(array $nodes)
