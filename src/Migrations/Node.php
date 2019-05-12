@@ -85,6 +85,18 @@ class Node
         $this->nodes = array_values($this->nodes);
     }
 
+    protected function removeNodes(int $firstIndex, int $lastIndex)
+    {
+        array_splice($this->nodes, $firstIndex, $lastIndex - $firstIndex);
+
+        $this->nodes = array_values($this->nodes);
+    }
+
+    protected function insertNode(Node $node, int $index)
+    {
+        $this->insertNodes([$node], $index);
+    }
+
     protected function insertNodes(array $nodes, int $index)
     {
         $this->nodes = array_values(array_merge(
@@ -105,7 +117,12 @@ class Node
         $this->nodes = array_values($this->nodes);
     }
 
-    protected function flat()
+    protected function moveANode(int $currentIndex, int $newIndex)
+    {
+        $this->moveASliceOfNodes($currentIndex, $currentIndex, $newIndex);
+    }
+
+    protected function unpack()
     {
         $nbrOfNodes = count($this->getNodes());
 
@@ -113,10 +130,41 @@ class Node
             $node = $this->getNodes()[$i];
 
             if ($node instanceof Node) {
-                $subNodes = $node->organize()->getNodes();
+                $subNodes = $node->organize()->optimize()->getNodes();
                 $nbrOfNodes += (count($subNodes) - 1);
                 $this->removeNode($i);
                 $this->insertNodes($subNodes, $i--);
+            }
+        }
+    }
+
+    protected function pack()
+    {
+        $nbrOfNodes = count($this->getNodes());
+
+        $firstIndex = null;
+        $commonTable = null;
+
+        for ($i = 0; $i < $nbrOfNodes; $i++) {
+            $node = $this->getNodes()[$i];
+
+            if (is_null($firstIndex)) {
+                $firstIndex = $i;
+                $commonTable = $node->getTableName();
+            } else if ($node->getTableName() !== $commonTable) {
+                $lastIndex = $i;
+                $subNodes = array_slice($this->nodes, $firstIndex, $lastIndex - $firstIndex);
+                $packNode = new Node($subNodes);
+
+                // Do not handle the just created node.
+                $i -= count($subNodes) - 1;
+                $nbrOfNodes -= count($subNodes) - 1;
+
+                $this->removeNodes($firstIndex, $lastIndex);
+                $this->insertNode($packNode, $firstIndex);
+
+                $firstIndex = $i;
+                $commonTable = $node->getTableName();
             }
         }
     }
@@ -127,7 +175,7 @@ class Node
             return $this;
         }
 
-        $this->flat();
+        $this->unpack();
 
         $fields = [];
         $nbrOfNodes = count($this->getNodes());
@@ -184,6 +232,19 @@ class Node
         return $this;
     }
 
+    protected function contraintCanMove(Contraint $node, int $firstIndex, int $lastIndex)
+    {
+        for ($i = $firstIndex; $i < $lastIndex; $i++) {
+            $nodeToCheck = $this->getNodes()[$i];
+
+            if ($nodeToCheck instanceof Command && in_array($nodeToCheck->getField(), $node->getFields())) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public function optimize()
     {
         if (!$this->organized) {
@@ -218,7 +279,7 @@ class Node
 
                                 if ($nodeToCheck instanceof Contraint) {
                                     if (in_array($nodeToMove->getField(), $nodeToCheck->getFields())) {
-                                        $this->moveASliceOfNodes($j, $j, ($k - 1));
+                                        $this->moveANode($j, ($k - 1));
                                         $moved = true;
                                         $j--;
                                         break;
@@ -228,7 +289,7 @@ class Node
 
                             if (!$moved && $nodeToMove === $this->getNodes()[$j]) {
                                 // Move after the contraint as it is not applied to this node.
-                                $this->moveASliceOfNodes($j, $j, $i);
+                                $this->moveANode($j, $i);
                                 $j--;
                             }
 
@@ -246,9 +307,8 @@ class Node
             if ($node instanceof Command) {
                 $movingTable = $node->getTableName();
 
-                for ($j = 0; $j <= $i; $j++) {
+                for ($j = $nbrOfNodes - 1; $j > $i; $j--) {
                     $nodeToMove = $this->getNodes()[$j];
-                    $moved = false;
 
                     if (in_array($nodeToMove, $movedNodes)) {
                         continue;
@@ -256,33 +316,24 @@ class Node
 
                     if ($nodeToMove instanceof Command) {
                         if ($nodeToMove->getTableName() === $movingTable) {
-                            for ($k = ($j + 1); $k <= $i; $k++) {
-                                $nodeToCheck = $this->getNodes()[$k];
-
-                                if ($nodeToCheck instanceof Contraint) {
-                                    if (in_array($nodeToMove->getField(), $nodeToCheck->getFields())) {
-                                        $this->moveASliceOfNodes($j, $j, ($k - 1));
-                                        $moved = true;
-                                        $j--;
-                                        break;
-                                    }
-                                }
-                            }
-
-                            if (!$moved && $nodeToMove === $this->getNodes()[$j]) {
-                                // Move after the contraint as it is not applied to this node.
-                                $this->moveASliceOfNodes($j, $j, $i);
-                                $j--;
-                            }
-
+                            $this->moveANode($j, $i);
                             $movedNodes[] = $nodeToMove;
+                            $j++;
+                        }
+                    } else {
+                        if ($this->contraintCanMove($nodeToMove, $i, $j)) {
+                            $this->moveANode($j, $i);
+                            $movedNodes[] = $nodeToMove;
+                            $j++;
                         }
                     }
                 }
             }
         }
 
-        // Ici vérifier qu'on respecte bien les conditions entre $j et $i pour le remonter sur $i
+        // Now, we can repack by subnodes all common commands with the same table.
+        $this->pack();
+
         $this->optimized = true;
 
         return $this;
