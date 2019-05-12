@@ -24,7 +24,7 @@ class Command
         $this->meta = $meta;
         $this->tableName = $meta->getTableName();
         $this->attname = $attname;
-        $this->properies = $properties;
+        $this->properties = $properties;
     }
 
     public function getMeta()

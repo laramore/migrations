@@ -11,7 +11,9 @@
 namespace Laramore\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Laramore\Commands\MigrateGenerate;
+use Laramore\Commands\{
+    MigrateClear, MigrateGenerate
+};
 
 class MigrateCommands extends ServiceProvider
 {
@@ -24,6 +26,7 @@ class MigrateCommands extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->commands([
+                MigrateClear::class,
                 MigrateGenerate::class,
             ]);
         }

@@ -1,6 +1,6 @@
 <?php
 /**
- * Generate missing migrations.
+ * Clear all migrations.
  *
  * @author Samy Nastuzzi <samy@nastuzzi.fr>
  *
@@ -13,17 +13,17 @@ namespace Laramore\Commands;
 use Illuminate\Console\Command;
 use Laramore\Migrations\Manager;
 
-class MigrateGenerate extends Command
+class MigrateClear extends Command
 {
     /**
      * @var string
      */
-    protected $signature = 'migrate:generate';
+    protected $signature = 'migrate:clear';
 
     /**
      * @var string
      */
-    protected $description = 'Generate missing migrations';
+    protected $description = 'Remove all migrations';
 
     /**
      * Exécution de la commande.
@@ -32,8 +32,6 @@ class MigrateGenerate extends Command
      */
     public function handle()
     {
-        // For now, we clean everything before creating migrations.
-        $this->call('migrate:clear');
-        (new Manager())->generateMigrations();
+        (new Manager())->clearMigrations();
     }
 }

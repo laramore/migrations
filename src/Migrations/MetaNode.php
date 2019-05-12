@@ -14,16 +14,18 @@ use Laramore\Meta;
 
 class MetaNode extends Node
 {
+    protected $type;
     protected $nodes = [];
     protected $contraints = [];
     protected $tableNames;
     protected $organized = false;
     protected $optimized = false;
 
-    public function __construct(array $nodes=[], Meta $meta)
+    public function __construct(array $nodes=[], Meta $meta, string $type='create')
     {
         $this->tableNames = [$meta->getTableName()];
         $this->tableMetas[$this->getTableName()] = $meta;
+        $this->type = $type;
 
         $this->setNodes($nodes);
     }
@@ -46,12 +48,14 @@ class MetaNode extends Node
         $this->nodes = $nodes;
     }
 
-    public function getNodes(): array
+    public function getFieldNodes(): array
     {
-        return array_merge(
-            $this->nodes,
-            $this->contraints
-        );
+        return $this->nodes;
+    }
+
+    public function getContraintNodes(): array
+    {
+        return $this->contraints;
     }
 
     public function getMeta(): Meta
@@ -62,6 +66,11 @@ class MetaNode extends Node
     public function getTableName(): string
     {
         return $this->tableNames[0];
+    }
+
+    public function getType(): string
+    {
+        return $this->type;
     }
 
     public function organize()

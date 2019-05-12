@@ -166,6 +166,7 @@ class Node
 
         $firstIndex = null;
         $commonTable = null;
+        $passedTables = [];
 
         for ($i = 0; $i < $nbrOfNodes; $i++) {
             $node = $this->getNodes()[$i];
@@ -176,7 +177,15 @@ class Node
             } else if ($node->getTableName() !== $commonTable) {
                 $lastIndex = $i;
                 $subNodes = array_slice($this->nodes, $firstIndex, ($lastIndex - $firstIndex));
-                $packNode = new MetaNode($subNodes, $this->tableMetas[$commonTable]);
+
+                if (in_array($commonTable, $passedTables)) {
+                    $metaType = 'update';
+                } else {
+                    $metaType = 'create';
+                    $passedTables[] = $commonTable;
+                }
+
+                $packNode = new MetaNode($subNodes, $this->tableMetas[$commonTable], $metaType);
 
                 // Do not handle the just created node.
                 $i -= (count($subNodes) - 1);
@@ -192,7 +201,14 @@ class Node
 
         if (!is_null($firstIndex) && $firstIndex !== 0) {
             $subNodes = array_slice($this->nodes, $firstIndex, ($nbrOfNodes - $firstIndex));
-            $packNode = new MetaNode($subNodes, $this->tableMetas[$commonTable]);
+
+            if (in_array($commonTable, $passedTables)) {
+                $metaType = 'update';
+            } else {
+                $metaType = 'create';
+            }
+
+            $packNode = new MetaNode($subNodes, $this->tableMetas[$commonTable], $metaType);
 
             $this->removeNodes($firstIndex, $nbrOfNodes);
             $this->insertNode($packNode->organize()->optimize(), $firstIndex);

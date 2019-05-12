@@ -11,12 +11,14 @@
 namespace Laramore\Migrations;
 
 use Laramore\Meta;
+use Illuminate\Filesystem\Filesystem;
 
 class Manager
 {
     protected $path;
     protected $actualNodes;
     protected $wantedNodes;
+    protected $counter = 0;
 
     public function __construct()
     {
@@ -84,24 +86,44 @@ class Manager
         ], $data))->render());
     }
 
-    protected function generateMigration(Meta $meta)
+    protected function getCounter()
     {
+        $counter = (string) $this->counter++;
+
+        for ($i = (6 - strlen($counter)); $i > 0; $i--) {
+            $counter = '0'.$counter;
+        }
+
+        return $counter;
+    }
+
+    protected function generateMigration(MetaNode $metaNode)
+    {
+        $meta = $metaNode->getMeta();
+
         $data = [
             'date' => now(),
             'model' => $model = $meta->getModelClassName(),
             'name' => 'Create'.ucfirst($model).'Table',
             'table' => $table = $meta->getTableName(),
-            'fields' => $meta->getMigrationProperties(),
-            'contraints' => $meta->getMigrationContraints(),
+            'fields' => $metaNode->getFieldNodes(),
+            'contraints' => array_map(function ($contraint) {
+                return $contraint->getCommand();
+            }, $metaNode->getContraintNodes()),
         ];
 
-        $this->generateMigrationFile('laramore::migration', $data, $this->path.'/'.date('Y_m_d_Hsi_').$table.'.php');
+        $this->generateMigrationFile('laramore::migration', $data, $this->path.'/'.date('Y_m_d_').$this->getCounter().'_'.$metaNode->getType().'_'.$table.'.php');
+    }
+
+    public function clearMigrations()
+    {
+        (new Filesystem)->cleanDirectory($this->path);
     }
 
     public function generateMigrations()
     {
-        foreach (Meta::getMetas() as $meta) {
-            $this->generateMigration($meta);
+        foreach ($this->wantedNodes->getNodes() as $node) {
+            $this->generateMigration($node);
         }
     }
 }
