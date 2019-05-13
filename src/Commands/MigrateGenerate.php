@@ -11,7 +11,7 @@
 namespace Laramore\Commands;
 
 use Illuminate\Console\Command;
-use Laramore\Migrations\Manager;
+use Laramore\Facades\MigrationManager;
 
 class MigrateGenerate extends Command
 {
@@ -34,6 +34,7 @@ class MigrateGenerate extends Command
     {
         // For now, we clean everything before creating migrations.
         $this->call('migrate:clear');
-        (new Manager())->generateMigrations();
+
+        MigrationManager::generateMigrations();
     }
 }

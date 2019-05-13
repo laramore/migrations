@@ -11,7 +11,7 @@
 namespace Laramore\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Laramore\Commands\MigrateGenerate;
+use Laramore\Migrations\Manager;
 
 class LaramoreMigrations extends ServiceProvider
 {
@@ -28,5 +28,9 @@ class LaramoreMigrations extends ServiceProvider
         $this->publishes([
             $viewPath => resource_path('views/vendor/laramore'),
         ]);
+
+        $this->app->singleton('MigrationManager', function() {
+            return new Manager;
+        });
     }
 }
