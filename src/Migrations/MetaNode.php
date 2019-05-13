@@ -17,7 +17,6 @@ class MetaNode extends Node
     protected $type;
     protected $nodes = [];
     protected $contraints = [];
-    protected $tableNames;
     protected $organized = false;
     protected $optimized = false;
 

@@ -10,8 +10,6 @@
 
 namespace Laramore\Migrations;
 
-use Laramore\Meta;
-
 class Command
 {
     protected $meta;
@@ -19,10 +17,9 @@ class Command
     protected $attname;
     protected $properties;
 
-    public function __construct(Meta $meta, string $attname, array $properties)
+    public function __construct(string $tableName, string $attname, array $properties)
     {
-        $this->meta = $meta;
-        $this->tableName = $meta->getTableName();
+        $this->tableName = $tableName;
         $this->attname = $attname;
         $this->properties = $properties;
     }

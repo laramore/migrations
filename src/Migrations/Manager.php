@@ -12,6 +12,7 @@ namespace Laramore\Migrations;
 
 use Laramore\Meta;
 use Illuminate\Filesystem\Filesystem;
+use DB;
 
 class Manager
 {
@@ -20,28 +21,28 @@ class Manager
     protected $wantedNodes;
     protected $counter = 0;
 
+    protected static $tableMetas;
+
     public function __construct()
     {
         $this->path = base_path('database/migrations');
 
-        $this->loadActualNodes();
         $this->loadWantedNodes();
-    }
-
-    protected function loadActualNodes()
-    {
-        $this->actualNodes = [];
+        $this->loadActualNodes();
     }
 
     protected function loadWantedNodes()
     {
         $wantedNodes = [];
+        static::$tableMetas = [];
 
         foreach (Meta::getMetas()->toArray() as $meta) {
             $nodes = [];
+            $tableName = $meta->getTableName();
+            static::$tableMetas[$tableName] = $meta;
 
             foreach ($meta->getMigrationProperties() as $attname => $properties) {
-                $nodes[] = new Command($meta, $attname, $properties);
+                $nodes[] = new Command($tableName, $attname, $properties);
             }
 
             if (count($nodes)) {
@@ -49,12 +50,29 @@ class Manager
             }
 
             foreach ($meta->getMigrationContraints() as $attname => $data) {
-                $wantedNodes[] = new Contraint($meta, $attname, $data['needs'], $data['properties']);
+                $wantedNodes[] = new Contraint($tableName, $attname, $data['needs'], $data['properties']);
             }
         }
 
         $this->wantedNodes = new Node($wantedNodes);
         $this->wantedNodes->organize()->optimize();
+    }
+
+    protected function loadActualNodes()
+    {
+        $doctrine = DB::connection()->getDoctrineSchemaManager();
+        $unvalidTable = config('database.migrations');
+        $actualNodes = [];
+
+        foreach ($doctrine->listTables() as $table) {
+            if ($table->getName() !== $unvalidTable) {
+                $actualNodes[] = new DatabaseNode($table);
+            }
+        }
+
+        $this->actualNodes = new Node($actualNodes);
+        dump($this->actualNodes);
+        dump($this->actualNodes->organize()->optimize());
     }
 
     protected function getFieldsFromNodes(array $nodes)
@@ -76,6 +94,16 @@ class Manager
     public function getDatabaseFields()
     {
         return $this->getFieldsFromNodes($this->actualNodes);
+    }
+
+    public static function getTableMetas()
+    {
+        return static::$tableMetas;
+    }
+
+    public static function getTableMeta(string $tableName)
+    {
+        return static::$tableMetas[$tableName];
     }
 
     protected function generateMigrationFile($viewName, $data, $path)

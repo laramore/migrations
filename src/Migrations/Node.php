@@ -14,7 +14,6 @@ class Node
 {
     protected $nodes = [];
     protected $tableNames = [];
-    protected $tableMetas = [];
     protected $organized = false;
     protected $optimized = false;
 
@@ -148,10 +147,6 @@ class Node
             $node = $this->getNodes()[$i];
 
             if ($node instanceof Node) {
-                if ($node instanceof MetaNode) {
-                    $this->tableMetas[$node->getTableName()] = $node->getMeta();
-                }
-
                 $subNodes = $node->organize()->optimize()->getNodes();
                 $nbrOfNodes += (count($subNodes) - 1);
                 $this->removeNode($i);
@@ -185,7 +180,7 @@ class Node
                     $passedTables[] = $commonTable;
                 }
 
-                $packNode = new MetaNode($subNodes, $this->tableMetas[$commonTable], $metaType);
+                $packNode = new MetaNode($subNodes, Manager::getTableMeta($commonTable), $metaType);
 
                 // Do not handle the just created node.
                 $i -= (count($subNodes) - 1);
@@ -208,7 +203,7 @@ class Node
                 $metaType = 'create';
             }
 
-            $packNode = new MetaNode($subNodes, $this->tableMetas[$commonTable], $metaType);
+            $packNode = new MetaNode($subNodes, Manager::getTableMeta($commonTable), $metaType);
 
             $this->removeNodes($firstIndex, $nbrOfNodes);
             $this->insertNode($packNode->organize()->optimize(), $firstIndex);

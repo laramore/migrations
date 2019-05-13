@@ -14,17 +14,15 @@ use Laramore\Meta;
 
 class Contraint
 {
-    protected $meta;
     protected $tableName;
     protected $needs;
     protected $command;
 
-    public function __construct(Meta $meta, string $attname, array $needs, array $properties)
+    public function __construct(string $tableName, string $attname, array $needs, array $properties)
     {
-        $this->meta = $meta;
+        $this->tableName = $tableName;
         $this->needs = $needs;
-        $this->command = new Command($meta, $attname, $properties);
-        $this->tableName = $this->command->getTableName();
+        $this->command = new Command($tableName, $attname, $properties);
     }
 
     public function getNodes()
