@@ -45,12 +45,12 @@ class Manager
                 $nodes[] = new Command($tableName, $attname, $properties);
             }
 
-            if (count($nodes)) {
-                $wantedNodes[] = new MetaNode($nodes, $meta);
+            foreach ($meta->getMigrationContraints() as $attname => $data) {
+                $nodes[] = new Contraint($tableName, $attname, $data['needs'], $data['properties']);
             }
 
-            foreach ($meta->getMigrationContraints() as $attname => $data) {
-                $wantedNodes[] = new Contraint($tableName, $attname, $data['needs'], $data['properties']);
+            if (count($nodes)) {
+                $wantedNodes[] = new MetaNode($nodes, $meta);
             }
         }
 
@@ -71,8 +71,7 @@ class Manager
         }
 
         $this->actualNodes = new Node($actualNodes);
-        dump($this->actualNodes);
-        dump($this->actualNodes->organize()->optimize());
+        $this->actualNodes->organize()->optimize();
     }
 
     protected function getFieldsFromNodes(array $nodes)

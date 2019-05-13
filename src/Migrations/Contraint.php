@@ -45,6 +45,11 @@ class Contraint
         return $this->command;
     }
 
+    public function getNeeds()
+    {
+        return $this->needs;
+    }
+
     public function getFields(): array
     {
         $fields = [];

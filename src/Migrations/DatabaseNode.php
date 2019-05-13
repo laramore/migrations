@@ -15,7 +15,7 @@ use Doctrine\DBAL\Schema\{
     Table, Column, ForeignKeyConstraint
 };
 
-class DatabaseNode extends Node
+class DatabaseNode extends AbstractNode
 {
     protected $nodes = [];
     protected $contraints = [];
@@ -147,13 +147,13 @@ class DatabaseNode extends Node
         return $this->type;
     }
 
-    public function organize()
+    protected function organizing()
     {
-        return $this;
+        // Cannot organize a DatabaseNode.
     }
 
-    public function optimize()
+    protected function optimizing()
     {
-        return $this;
+        // Cannot optimize a DatabaseNode.
     }
 }

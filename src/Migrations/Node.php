@@ -10,206 +10,8 @@
 
 namespace Laramore\Migrations;
 
-class Node
+class Node extends AbstractNode
 {
-    protected $nodes = [];
-    protected $tableNames = [];
-    protected $organized = false;
-    protected $optimized = false;
-
-    public function __construct(array $nodes=[])
-    {
-        $this->setNodes($nodes);
-    }
-
-    protected function loadTableNames($nodes)
-    {
-        if ($nodes instanceof Command || $nodes instanceof Contraint) {
-            return [$nodes->getTableName()];
-        } else if ($nodes instanceof Node) {
-            return $nodes->getTableNames();
-        } else if (is_array($nodes) && count($nodes)) {
-            return array_unique(array_merge(...array_map(function ($node) {
-                return $this->loadTableNames($node);
-            }, $nodes)));
-        } else {
-            throw new \Exception('A node can only have subnodes and commands');
-        }
-    }
-
-    protected function setNodes($nodes)
-    {
-        $nodes = array_values($nodes);
-
-        $this->organized = false;
-        $this->optimized = false;
-
-        $this->nodes = $nodes;
-
-        $this->tableNames = array_values($this->loadTableNames($nodes));
-    }
-
-    public function getNodes(): array
-    {
-        return $this->nodes;
-    }
-
-    public function getTableNames(): array
-    {
-        return $this->tableNames;
-    }
-
-    public function getTableMetas(): array
-    {
-        return $this->tableMetas;
-    }
-
-    public function getFields(): array
-    {
-        $fields = [];
-
-        foreach ($this->getNodes() as $node) {
-            if ($node instanceof Node) {
-                $fields = array_merge($fields, $node->getFields());
-            } else if ($node instanceof Command) {
-                $fields[] = $node->getField();
-            }
-        }
-
-        return array_unique($fields);
-    }
-
-    public function getFieldsAndContraints(): array
-    {
-        $fields = [];
-        foreach ($this->getNodes() as $node) {
-            if ($node instanceof Command) {
-                $fields[] = $node->getField();
-            } else if ($node instanceof Contraint) {
-                $fields[] = $node->getCommand()->getField().'+';
-            } else {
-                $fields = array_merge($fields, $node->getFieldsAndContraints());
-            }
-        }
-
-        return array_unique($fields);
-    }
-
-    protected function removeNode(int $index)
-    {
-        unset($this->nodes[$index]);
-
-        $this->nodes = array_values($this->nodes);
-    }
-
-    protected function removeNodes(int $firstIndex, int $lastIndex)
-    {
-        array_splice($this->nodes, $firstIndex, ($lastIndex - $firstIndex));
-
-        $this->nodes = array_values($this->nodes);
-    }
-
-    protected function insertNode(Node $node, int $index)
-    {
-        $this->insertNodes([$node], $index);
-    }
-
-    protected function insertNodes(array $nodes, int $index)
-    {
-        $this->nodes = array_values(array_merge(
-            array_slice($this->nodes, 0, $index),
-            $nodes,
-            array_slice($this->nodes, $index),
-        ));
-    }
-
-    protected function moveASliceOfNodes(int $firstIndex, int $lastIndex, int $newIndex)
-    {
-        for ($firstIndex; $firstIndex <= $lastIndex; $firstIndex++ && $newIndex++) {
-            $element = array_splice($this->nodes, $firstIndex, 1);
-
-            array_splice($this->nodes, $newIndex, 0, $element);
-        }
-
-        $this->nodes = array_values($this->nodes);
-    }
-
-    protected function moveANode(int $currentIndex, int $newIndex)
-    {
-        $this->moveASliceOfNodes($currentIndex, $currentIndex, $newIndex);
-    }
-
-    protected function unpack()
-    {
-        $nbrOfNodes = count($this->getNodes());
-
-        for ($i = 0; $i < $nbrOfNodes; $i++) {
-            $node = $this->getNodes()[$i];
-
-            if ($node instanceof Node) {
-                $subNodes = $node->organize()->optimize()->getNodes();
-                $nbrOfNodes += (count($subNodes) - 1);
-                $this->removeNode($i);
-                $this->insertNodes($subNodes, $i--);
-            }
-        }
-    }
-
-    protected function pack()
-    {
-        $nbrOfNodes = count($this->getNodes());
-
-        $firstIndex = null;
-        $commonTable = null;
-        $passedTables = [];
-
-        for ($i = 0; $i < $nbrOfNodes; $i++) {
-            $node = $this->getNodes()[$i];
-
-            if (is_null($firstIndex)) {
-                $firstIndex = $i;
-                $commonTable = $node->getTableName();
-            } else if ($node->getTableName() !== $commonTable) {
-                $lastIndex = $i;
-                $subNodes = array_slice($this->nodes, $firstIndex, ($lastIndex - $firstIndex));
-
-                if (in_array($commonTable, $passedTables)) {
-                    $metaType = 'update';
-                } else {
-                    $metaType = 'create';
-                    $passedTables[] = $commonTable;
-                }
-
-                $packNode = new MetaNode($subNodes, Manager::getTableMeta($commonTable), $metaType);
-
-                // Do not handle the just created node.
-                $i -= (count($subNodes) - 1);
-                $nbrOfNodes -= (count($subNodes) - 1);
-
-                $this->removeNodes($firstIndex, $lastIndex);
-                $this->insertNode($packNode->organize()->optimize(), $firstIndex);
-
-                $firstIndex = $i;
-                $commonTable = $node->getTableName();
-            }
-        }
-
-        if (!is_null($firstIndex) && $firstIndex !== 0) {
-            $subNodes = array_slice($this->nodes, $firstIndex, ($nbrOfNodes - $firstIndex));
-
-            if (in_array($commonTable, $passedTables)) {
-                $metaType = 'update';
-            } else {
-                $metaType = 'create';
-            }
-
-            $packNode = new MetaNode($subNodes, Manager::getTableMeta($commonTable), $metaType);
-
-            $this->removeNodes($firstIndex, $nbrOfNodes);
-            $this->insertNode($packNode->organize()->optimize(), $firstIndex);
-        }
-    }
-
     protected function contraintCanMove(Contraint $node, int $firstIndex, int $lastIndex)
     {
         for ($i = $firstIndex; $i < $lastIndex; $i++) {
@@ -223,11 +25,53 @@ class Node
         return true;
     }
 
-    public function organize()
+    protected function getMetaContraintTables(MetaNode $node)
     {
-        if ($this->organized) {
-            return $this;
+        return array_unique(array_merge(...array_map(function (Contraint $contraint) {
+            return array_map(function (array $need) {
+                return $need['table'];
+            }, $contraint->getNeeds());
+        }, $node->getContraintNodes())));
+    }
+
+    protected function swapNodes(int $firstIndex, int $secondIndex)
+    {
+        if ($secondIndex < $firstIndex) {
+            [$firstIndex, $secondIndex] = [$secondIndex, $firstIndex];
         }
+
+        $this->moveNode($firstIndex, $secondIndex);
+
+        if (($secondIndex - $firstIndex) > 1) {
+            $this->moveNode(($secondIndex - 1), $firstIndex);
+        }
+    }
+
+    protected function orderBeforeOrganizing()
+    {
+        $this->pack();
+
+        $nbrOfNodes = count($this->getNodes());
+
+        for ($i = 0; $i < $nbrOfNodes; $i++) {
+            for ($j = ($i + 1); $j < $nbrOfNodes; $j++) {
+                $node1 = $this->getNodes()[$i];
+                $node2 = $this->getNodes()[$j];
+                $tableNames1 = $this->getMetaContraintTables($node1);
+                $tableNames2 = $this->getMetaContraintTables($node2);
+
+                if (count($tableNames1) < count($tableNames2) || (count($tableNames1) === count($tableNames2) && in_array($node2->getTableName(), $tableNames1))) {
+                    $this->swapNodes($i, $j);
+                }
+            }
+        }
+    }
+
+    protected function organizing()
+    {
+        $this->orderBeforeOrganizing();
+
+        $this->unpack();
 
         $fields = [];
         $nbrOfNodes = count($this->getNodes());
@@ -245,14 +89,14 @@ class Node
 
                         if ($nodeToCheck instanceof Command) {
                             $missingFields = array_diff($missingFields, [$nodeToCheck->getField()]);
-                        } else if ($nodeToCheck instanceof Node) {
+                        } else if ($nodeToCheck instanceof AbstractNode) {
                             $missingFields = array_diff($missingFields, $nodeToCheck->getFields());
                         }
 
                         if (count($missingFields) === 0) {
                             if ($nodeToCheck instanceof Command) {
                                 $groupedTables = [$nodeToCheck->getTableName()];
-                            } else if ($nodeToCheck instanceof Node) {
+                            } else if ($nodeToCheck instanceof AbstractNode) {
                                 $groupedTables = $nodeToCheck->getTableNames();
                             }
 
@@ -261,7 +105,7 @@ class Node
 
                                 if ($nodeNotToIsolate instanceof Command) {
                                     $tables = [$nodeNotToIsolate->getTableName()];
-                                } else if ($nodeNotToIsolate instanceof Node) {
+                                } else if ($nodeNotToIsolate instanceof AbstractNode) {
                                     $tables = $nodeNotToIsolate->getTableNames();
                                 }
 
@@ -276,33 +120,21 @@ class Node
                         }
                     }
 
-                    $this->moveANode($i--, $j);
+                    $this->moveNode($i--, $j);
                 }
             } else {
                 if ($nodeToMove instanceof Command) {
                     $fields[] = $nodeToMove->getField();
-                } else if ($nodeToMove instanceof Node) {
+                } else if ($nodeToMove instanceof AbstractNode) {
                     $fields = array_merge($fields, $nodeToMove->getFields());
                 }
             }
         }
-
-        $this->unpack();
-
-        $this->organized = true;
-
-        return $this;
     }
 
-    public function optimize()
+    protected function optimizing()
     {
-        if (!$this->organized) {
-            throw new \Exception('This migration needs to be organized first !');
-        }
-
-        if ($this->optimized) {
-            return $this;
-        }
+        $this->unpack();
 
         $nbrOfNodes = count($this->getNodes());
 
@@ -328,7 +160,7 @@ class Node
 
                                 if ($nodeToCheck instanceof Contraint) {
                                     if (in_array($nodeToMove->getField(), $nodeToCheck->getFields())) {
-                                        $this->moveANode($j, ($k - 1));
+                                        $this->moveNode($j, ($k - 1));
                                         $moved = true;
                                         $j--;
                                         break;
@@ -338,7 +170,7 @@ class Node
 
                             if (!$moved && $nodeToMove === $this->getNodes()[$j]) {
                                 // Move after the contraint as it is not applied to this node.
-                                $this->moveANode($j, $i);
+                                $this->moveNode($j, $i);
                                 $j--;
                             }
 
@@ -365,13 +197,13 @@ class Node
 
                     if ($nodeToMove instanceof Command) {
                         if ($nodeToMove->getTableName() === $movingTable) {
-                            $this->moveANode($j, $i);
+                            $this->moveNode($j, $i);
                             $movedNodes[] = $nodeToMove;
                             $j++;
                         }
                     } else {
                         if ($this->contraintCanMove($nodeToMove, $i, $j)) {
-                            $this->moveANode($j, $i);
+                            $this->moveNode($j, $i);
                             $movedNodes[] = $nodeToMove;
                             $j++;
                         }
@@ -396,7 +228,7 @@ class Node
 
                     if ($nodeToMove instanceof Contraint) {
                         if ($nodeToMove->getTableName() === $movingTable) {
-                            $this->moveANode($j, $i);
+                            $this->moveNode($j, $i);
                             $movedNodes[] = $nodeToMove;
                         }
                     }
@@ -406,9 +238,5 @@ class Node
 
         // Now, we can repack by subnodes all common commands with the same table.
         $this->pack();
-
-        $this->optimized = true;
-
-        return $this;
     }
 }

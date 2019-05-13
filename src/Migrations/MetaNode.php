@@ -12,7 +12,7 @@ namespace Laramore\Migrations;
 
 use Laramore\Meta;
 
-class MetaNode extends Node
+class MetaNode extends AbstractNode
 {
     protected $type;
     protected $nodes = [];
@@ -32,7 +32,7 @@ class MetaNode extends Node
     protected function setNodes($nodes)
     {
         $nodes = array_map(function ($node) {
-            if ($node instanceof Node) {
+            if ($node instanceof AbstractNode) {
                 throw new \Exception('A MetaNode only contains commands and contraints');
             } else if ($node->getTableName() !== $this->getTableName()) {
                 throw new \Exception('All subnodes should be from the current table name');
@@ -47,14 +47,22 @@ class MetaNode extends Node
         $this->nodes = $nodes;
     }
 
+    public function getNodes(): array
+    {
+        return array_merge(
+            $this->nodes,
+            $this->contraints
+        );
+    }
+
     public function getFieldNodes(): array
     {
-        return $this->nodes;
+        return $this->organize()->nodes;
     }
 
     public function getContraintNodes(): array
     {
-        return $this->contraints;
+        return $this->organize()->contraints;
     }
 
     public function getMeta(): Meta
@@ -72,12 +80,8 @@ class MetaNode extends Node
         return $this->type;
     }
 
-    public function organize()
+    protected function organizing()
     {
-        if ($this->organized) {
-            return $this;
-        }
-
         $nbrOfNodes = count($this->getNodes());
 
         for ($i = 0; $i < $nbrOfNodes; $i++) {
@@ -89,22 +93,10 @@ class MetaNode extends Node
                 $nbrOfNodes--;
             }
         }
-
-        $this->organized = true;
-
-        return $this;
     }
 
-    public function optimize()
+    protected function optimizing()
     {
-        if (!$this->organized) {
-            throw new \Exception('This migration needs to be organized first !');
-        }
-
-        if ($this->optimized) {
-            return $this;
-        }
-
         $nbrOfNodes = count($this->getNodes());
         $unorderedNodes = $this->nodes;
         $this->nodes = [];
@@ -123,9 +115,5 @@ class MetaNode extends Node
         if (count($unorderedNodes) !== count($this->nodes)) {
             throw new \Exception('Some commands are not meant to be created by this meta');
         }
-
-        $this->optimized = true;
-
-        return $this;
     }
 }
