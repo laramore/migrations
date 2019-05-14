@@ -80,6 +80,11 @@ class MetaNode extends AbstractNode
         return $this->type;
     }
 
+    public function setType(string $type)
+    {
+        $this->type = $type;
+    }
+
     protected function organizing()
     {
         $nbrOfNodes = count($this->getNodes());

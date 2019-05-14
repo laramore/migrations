@@ -12,6 +12,7 @@ namespace Laramore\Migrations;
 
 use Laramore\Meta;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Str;
 use DB;
 
 class Manager
@@ -19,6 +20,7 @@ class Manager
     protected $path;
     protected $actualNodes;
     protected $wantedNodes;
+    protected $missingNodes;
     protected $counter = 0;
 
     protected static $tableMetas;
@@ -29,6 +31,7 @@ class Manager
 
         $this->loadWantedNodes();
         $this->loadActualNodes();
+        $this->loadMissingNodes();
     }
 
     protected function loadWantedNodes()
@@ -72,6 +75,11 @@ class Manager
 
         $this->actualNodes = new Node($actualNodes);
         $this->actualNodes->organize()->optimize();
+    }
+
+    protected function loadMissingNodes()
+    {
+        $this->missingNodes = $this->wantedNodes->diff($this->actualNodes);
     }
 
     protected function getFieldsFromNodes(array $nodes)
@@ -133,14 +141,18 @@ class Manager
             'type' => ($type = $metaNode->getType()) === 'update' ? 'table' : $type,
             'model' => $model = $meta->getModelClassName(),
             'table' => $table = $meta->getTableName(),
-            'name' => ucfirst($type).ucfirst($table).'Table',
+            'name' => $name = ucfirst($type).ucfirst($table).'Table',
             'fields' => $metaNode->getFieldNodes(),
             'contraints' => array_map(function ($contraint) {
                 return $contraint->getCommand();
             }, $metaNode->getContraintNodes()),
         ];
 
-        $this->generateMigrationFile('laramore::migration', $data, $this->path.'/'.date('Y_m_d_').$this->getCounter().'_'.$type.'_'.$table.'_table.php');
+        $fileName = date('Y_m_d_').$this->getCounter().'_'.Str::snake($name);
+
+        $this->generateMigrationFile('laramore::migration', $data, $this->path.'/'.$fileName.'.php');
+
+        return $fileName;
     }
 
     public function clearMigrations()
@@ -150,8 +162,12 @@ class Manager
 
     public function generateMigrations()
     {
-        foreach ($this->wantedNodes->getNodes() as $node) {
-            $this->generateMigration($node);
+        $generatedFiles = [];
+
+        foreach ($this->missingNodes->getNodes() as $node) {
+            $generatedFiles[] = $this->generateMigration($node);
         }
+
+        return $generatedFiles;
     }
 }

@@ -44,6 +44,13 @@ class Command
         return $this->properties;
     }
 
+    public function addProperty(string $key, $value)
+    {
+        $this->properties[$key] = $value;
+
+        return $this;
+    }
+
     public function getField()
     {
         return $this->getTableName().'.'.$this->getAttname();

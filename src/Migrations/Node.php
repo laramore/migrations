@@ -241,4 +241,40 @@ class Node extends AbstractNode
         // Now, we can repack by subnodes all common commands with the same table.
         $this->pack();
     }
+
+    protected function getResultedCommand(array $nodes, Command $command)
+    {
+        foreach ($nodes as $node) {
+            if ($node instanceof Command && $node->getField() === $command->getField()) {
+                if ((count(array_diff($node->getProperties(), $command->getProperties())) + count(array_diff($command->getProperties(), $node->getProperties())))) {
+                    throw new \Exception('Calculate the diff.');
+                } else {
+                    return null;
+                }
+            }
+        }
+
+        return $command;
+    }
+
+    public function diff(Node $node): Node
+    {
+        $nodes = (new static($this->getNodes()))->unpack()->getNodes();
+        $substractNodes = (new static($node->getNodes()))->unpack()->getNodes();
+        $diffNodes = [];
+
+        foreach ($nodes as $nodeToCheck) {
+            if ($nodeToCheck instanceof Command) {
+                $resultedNode = $this->getResultedCommand($substractNodes, $nodeToCheck);
+
+                if ($resultedNode) {
+                    $diffNodes[] = $resultedNode;
+                }
+            } else {
+                $diffNodes[] = $nodeToCheck;
+            }
+        }
+
+        return (new static($diffNodes))->organize()->optimize();
+    }
 }
