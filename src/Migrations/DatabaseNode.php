@@ -12,7 +12,7 @@ namespace Laramore\Migrations;
 
 use Illuminate\Support\Facades\Schema;
 use Doctrine\DBAL\Schema\{
-    Table, Column, ForeignKeyConstraint
+    Table, Column, ForeignKeyConstraint, Index
 };
 
 class DatabaseNode extends AbstractNode
@@ -27,9 +27,10 @@ class DatabaseNode extends AbstractNode
         $this->tableNames = [$table->getName()];
 
         $this->setNodes(array_merge($table->getColumns(), $table->getForeignKeys()));
+        $this->addIndexes($table->getIndexes());
     }
 
-    protected function setNodes($nodes)
+    protected function setNodes(array $nodes)
     {
         $this->nodes = array_map(function ($node) {
             if ($node instanceof Column) {
@@ -42,6 +43,39 @@ class DatabaseNode extends AbstractNode
 
             return $node;
         }, array_values($nodes));
+    }
+
+    protected function setIndexCommand(Command $command, Index $index)
+    {
+        if ($index->isPrimary()) {
+            foreach ($command->getProperties() as $key => $value) {
+                if ($value === $command->getAttname()) {
+                    if ($key === 'increments') {
+                        return;
+                    } else {
+                        $command->addProperty('primary', true);
+                    }
+                }
+            }
+        }
+
+        if ($index->isUnique()) {
+            $command->addProperty('unique', true);
+        }
+    }
+
+    protected function addIndexes(array $indexes)
+    {
+        foreach ($indexes as $index) {
+            $attname = $index->getColumns()[0];
+
+            foreach ($this->getNodes() as $node) {
+                if ($node instanceof Command && $node->getAttname() === $attname) {
+                    $this->setIndexCommand($node, $index);
+                    break;
+                }
+            }
+        }
     }
 
     protected function getTypeFromColumn(Column $column)
@@ -59,7 +93,7 @@ class DatabaseNode extends AbstractNode
         return $type;
     }
 
-    protected function getPropertiesFromColumn(Column $column)
+    protected function getPropertiesFromColumn(Column $column, string $type)
     {
         $properties = [];
 
@@ -74,7 +108,11 @@ class DatabaseNode extends AbstractNode
         }
 
         if ($default = $column->getDefault()) {
-            $properties['default'] = $default;
+            if ($type === 'datetime') {
+                $properties['useCurrent'] = true;
+            } else {
+                $properties['default'] = $default;
+            }
         }
 
         return $properties;
@@ -83,8 +121,8 @@ class DatabaseNode extends AbstractNode
     public function columnToCommand(Column $column)
     {
         $properties = array_merge([
-            $this->getTypeFromColumn($column) => $column->getName(),
-        ], $this->getPropertiesFromColumn($column));
+            ($type = $this->getTypeFromColumn($column)) => $column->getName(),
+        ], $this->getPropertiesFromColumn($column, $type));
 
         return new Command($this->getTableName(), $column->getName(), $properties);
     }
