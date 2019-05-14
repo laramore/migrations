@@ -28,8 +28,8 @@ abstract class AbstractNode
             return [$nodes->getTableName()];
         } else if ($nodes instanceof AbstractNode) {
             return $nodes->getTableNames();
-        } else if (is_array($nodes) && count($nodes)) {
-            return array_unique(array_merge(...array_map(function ($node) {
+        } else if (is_array($nodes)) {
+            return array_unique(array_merge([], ...array_map(function ($node) {
                 return $this->loadTableNames($node);
             }, $nodes)));
         } else {
@@ -37,7 +37,7 @@ abstract class AbstractNode
         }
     }
 
-    protected function setNodes($nodes)
+    protected function setNodes(array $nodes)
     {
         $nodes = array_values($nodes);
 
@@ -87,7 +87,7 @@ abstract class AbstractNode
             if ($node instanceof Command) {
                 $fields[] = $node->getField();
             } else if ($node instanceof Contraint) {
-                $fields[] = $node->getCommand()->getField().'+';
+                $fields[] = $node->getCommand()->getField().'*';
             } else {
                 $fields = array_merge($fields, $node->getFieldsAndContraints());
             }
@@ -154,6 +154,8 @@ abstract class AbstractNode
                 $this->insertNodes($subNodes, $i--);
             }
         }
+
+        return $this;
     }
 
     public function pack()
@@ -216,6 +218,8 @@ abstract class AbstractNode
             $this->removeNodes($firstIndex, $nbrOfNodes);
             $this->insertNode($packNode->organize()->optimize(), $firstIndex);
         }
+
+        return $this;
     }
 
     abstract protected function organizing();

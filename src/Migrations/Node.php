@@ -27,7 +27,7 @@ class Node extends AbstractNode
 
     protected function getMetaContraintTables(MetaNode $node)
     {
-        return array_unique(array_merge(...array_map(function (Contraint $contraint) {
+        return array_unique(array_merge([], ...array_map(function (Contraint $contraint) {
             return array_map(function (array $need) {
                 return $need['table'];
             }, $contraint->getNeeds());
@@ -83,7 +83,7 @@ class Node extends AbstractNode
                 $neededFields = $nodeToMove->getFields();
                 $missingFields = array_diff($neededFields, $fields);
 
-                if (count($missingFields)) {
+                if ($missingFieldsCount = count($missingFields)) {
                     for ($j = ($i + 1); $j < $nbrOfNodes; $j++) {
                         $nodeToCheck = $this->getNodes()[$j];
 
@@ -120,7 +120,9 @@ class Node extends AbstractNode
                         }
                     }
 
-                    $this->moveNode($i--, $j);
+                    if ($missingFieldsCount !== count($missingFields)) {
+                        $this->moveNode($i--, $j);
+                    }
                 }
             } else {
                 if ($nodeToMove instanceof Command) {

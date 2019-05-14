@@ -29,7 +29,7 @@ class MetaNode extends AbstractNode
         $this->setNodes($nodes);
     }
 
-    protected function setNodes($nodes)
+    protected function setNodes(array $nodes)
     {
         $nodes = array_map(function ($node) {
             if ($node instanceof AbstractNode) {
