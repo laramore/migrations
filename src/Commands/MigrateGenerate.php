@@ -82,7 +82,7 @@ class MigrateGenerate extends Command
                 $this->line("<info>Generated Migration:</info> {$generatedFile}");
             }
         } else {
-            $this->warning('No new migration to generate');
+            $this->warn('No new migrations to generate');
         }
     }
 

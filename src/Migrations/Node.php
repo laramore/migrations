@@ -257,6 +257,27 @@ class Node extends AbstractNode
         return $command;
     }
 
+    protected function getResultedContraint(array $nodes, Contraint $contraint)
+    {
+        $command = $contraint->getCommand();
+
+        foreach ($nodes as $node) {
+            if ($node instanceof Contraint) {
+                $nodeCommand = $node->getCommand();
+
+                if ($nodeCommand->getField() === $command->getField()) {
+                    if ((count(array_diff($nodeCommand->getProperties(), $command->getProperties())) + count(array_diff($command->getProperties(), $nodeCommand->getProperties())))) {
+                        throw new \Exception('Calculate the diff.');
+                    } else {
+                        return null;
+                    }
+                }
+            }
+        }
+
+        return $contraint;
+    }
+
     public function diff(Node $node): Node
     {
         $nodes = (new static($this->getNodes()))->unpack()->getNodes();
@@ -271,7 +292,7 @@ class Node extends AbstractNode
                     $diffNodes[] = $resultedNode;
                 }
             } else {
-                $diffNodes[] = $nodeToCheck;
+                $resultedNode = $this->getResultedContraint($substractNodes, $nodeToCheck);
             }
         }
 
