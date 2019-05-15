@@ -120,11 +120,9 @@ class DatabaseNode extends AbstractNode
 
     public function columnToCommand(Column $column)
     {
-        $properties = array_merge([
-            ($type = $this->getTypeFromColumn($column)) => $column->getName(),
-        ], $this->getPropertiesFromColumn($column, $type));
+        $type = $this->getTypeFromColumn($column);
 
-        return new Command($this->getTableName(), $column->getName(), $properties);
+        return new Command($this->getTableName(), $type, $column->getName(), $this->getPropertiesFromColumn($column, $type));
     }
 
     protected function getNeedsFromForeignKey(ForeignKeyConstraint $foreignKeyContraint)
@@ -144,7 +142,6 @@ class DatabaseNode extends AbstractNode
     protected function getPropertiesFromForeignKey(ForeignKeyConstraint $foreignKeyContraint)
     {
         $properties = [
-            'foreign' => $foreignKeyContraint->getLocalColumns()[0],
             'references' => $foreignKeyContraint->getForeignColumns()[0],
             'on' => $foreignKeyContraint->getForeignTableName(),
         ];

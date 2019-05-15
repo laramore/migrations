@@ -14,12 +14,14 @@ class Command
 {
     protected $meta;
     protected $tableName;
+    protected $type;
     protected $attname;
     protected $properties;
 
-    public function __construct(string $tableName, string $attname, array $properties)
+    public function __construct(string $tableName, string $type, string $attname, array $properties)
     {
         $this->tableName = $tableName;
+        $this->type = $type;
         $this->attname = $attname;
         $this->properties = $properties;
     }
@@ -41,7 +43,9 @@ class Command
 
     public function getProperties()
     {
-        return $this->properties;
+        return array_merge([
+            $this->type => $this->attname,
+        ], $this->properties);
     }
 
     public function addProperty(string $key, $value)

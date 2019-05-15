@@ -287,12 +287,12 @@ class Node extends AbstractNode
         foreach ($nodes as $nodeToCheck) {
             if ($nodeToCheck instanceof Command) {
                 $resultedNode = $this->getResultedCommand($substractNodes, $nodeToCheck);
-
-                if ($resultedNode) {
-                    $diffNodes[] = $resultedNode;
-                }
             } else {
                 $resultedNode = $this->getResultedContraint($substractNodes, $nodeToCheck);
+            }
+
+            if ($resultedNode) {
+                $diffNodes[] = $resultedNode;
             }
         }
 

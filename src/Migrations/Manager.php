@@ -12,6 +12,7 @@ namespace Laramore\Migrations;
 
 use Laramore\Meta;
 use Illuminate\Filesystem\Filesystem;
+use Laramore\Fields\Foreign;
 use Illuminate\Support\Str;
 use DB;
 
@@ -27,11 +28,45 @@ class Manager
 
     public function __construct()
     {
-        $this->path = base_path('database/migrations');
+        $this->path = base_path('database'.DIRECTORY_SEPARATOR.'migrations');
 
         $this->loadWantedNodes();
         $this->loadActualNodes();
         $this->loadMissingNodes();
+    }
+
+    protected function getNodesFromMeta(Meta $meta)
+    {
+        $nodes = [];
+        $tableName = $meta->getTableName();
+
+        foreach ($meta->getFields() as $field) {
+            $nodes[] = new Command($tableName, $field->type, $field->attname, $field->getProperties());
+        }
+
+        foreach ($meta->getComposites() as $composite) {
+            if ($composite instanceof Foreign) {
+                $needs = [
+                    [
+                        'table' => $toTableName = $composite->on::getMeta()->getTableName(),
+                        'field' => $composite->to,
+                    ],
+                    [
+                        'table' => $tableName,
+                        'field' => $attname = $composite->from,
+                    ],
+                ];
+
+                $properties = [
+                    'references' => $composite->to,
+                    'on' => $toTableName
+                ];
+
+                $nodes[] = new Contraint($tableName, $attname, $needs, $properties);
+            }
+        }
+
+        return $nodes;
     }
 
     protected function loadWantedNodes()
@@ -40,17 +75,10 @@ class Manager
         static::$tableMetas = [];
 
         foreach (Meta::getMetas()->toArray() as $meta) {
-            $nodes = [];
             $tableName = $meta->getTableName();
             static::$tableMetas[$tableName] = $meta;
 
-            foreach ($meta->getMigrationProperties() as $attname => $properties) {
-                $nodes[] = new Command($tableName, $attname, $properties);
-            }
-
-            foreach ($meta->getMigrationContraints() as $attname => $data) {
-                $nodes[] = new Contraint($tableName, $attname, $data['needs'], $data['properties']);
-            }
+            $nodes = $this->getNodesFromMeta($meta);
 
             if (count($nodes)) {
                 $wantedNodes[] = new MetaNode($nodes, $meta);
@@ -150,7 +178,7 @@ class Manager
 
         $fileName = date('Y_m_d_').$this->getCounter().'_'.Str::snake($name);
 
-        $this->generateMigrationFile('laramore::migration', $data, $this->path.'/'.$fileName.'.php');
+        $this->generateMigrationFile('laramore::migration', $data, $this->path.DIRECTORY_SEPARATOR.$fileName.'.php');
 
         return $fileName;
     }

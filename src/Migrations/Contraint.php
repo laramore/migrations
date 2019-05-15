@@ -22,7 +22,7 @@ class Contraint
     {
         $this->tableName = $tableName;
         $this->needs = $needs;
-        $this->command = new Command($tableName, $attname, $properties);
+        $this->command = new Command($tableName, 'foreign', $attname, $properties);
     }
 
     public function getNodes()
