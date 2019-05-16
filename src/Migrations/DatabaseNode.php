@@ -53,14 +53,14 @@ class DatabaseNode extends AbstractNode
                     if ($key === 'increments') {
                         return;
                     } else {
-                        $command->addProperty('primary', true);
+                        $command->setProperty('primary', true);
                     }
                 }
             }
         }
 
         if ($index->isUnique()) {
-            $command->addProperty('unique', true);
+            $command->setProperty('unique', true);
         }
     }
 

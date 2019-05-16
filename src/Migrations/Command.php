@@ -48,7 +48,7 @@ class Command
         ], $this->properties);
     }
 
-    public function addProperty(string $key, $value)
+    public function setProperty(string $key, $value)
     {
         $this->properties[$key] = $value;
 

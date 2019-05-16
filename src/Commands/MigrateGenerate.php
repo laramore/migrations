@@ -19,7 +19,11 @@ class MigrateGenerate extends Command
     /**
      * @var string
      */
-    protected $signature = 'migrate:generate {--database=}';
+    protected $signature = 'migrate:generate
+        {--database= : The database connection to use}
+        {--path= : The path to the migrations files to use}
+        {--realpath= : Indicate any provided migration file paths are pre-resolved absolute paths}
+    ';
 
     /**
      * @var string
@@ -43,7 +47,7 @@ class MigrateGenerate extends Command
     {
         parent::__construct();
 
-        $this->migrator = app()['migrator'];
+        $this->migrator = app('migrator');
     }
 
     /**
@@ -54,25 +58,29 @@ class MigrateGenerate extends Command
     public function handle()
     {
         $this->migrator->setConnection($this->option('database'));
-
-        if (! $this->migrator->repositoryExists()) {
-            return $this->error('Migration table not found.');
-        }
-
-        $batches = $this->migrator->getRepository()->getMigrationBatches();
         $files = $this->migrator->getMigrationFiles($this->getMigrationPaths());
-        $ranMigrations = [];
 
-        foreach ($batches as $name => $status) {
-            if ($status > 0) {
-                $ranMigrations[] = $name;
+        if ($this->migrator->repositoryExists()) {
+            $batches = $this->migrator->getRepository()->getMigrationBatches();
+            $ranMigrations = [];
+
+            foreach ($batches as $name => $status) {
+                if ($status > 0) {
+                    $ranMigrations[] = $name;
+                }
             }
-        }
 
-        if (count(array_diff(array_keys($files), $ranMigrations))) {
-            $this->error('All migrations are not launched');
+            if (count(array_diff(array_keys($files), $ranMigrations))) {
+                $this->error('All migrations are not launched');
 
-            return false;
+                return false;
+            }
+        } else {
+            if (count($files)) {
+                $this->error('No migrations were launched. Clear them or run all of them before generating new ones');
+
+                return false;
+            }
         }
 
         $generatedFiles = MigrationManager::generateMigrations();
@@ -98,7 +106,7 @@ class MigrateGenerate extends Command
         // migrations may be run for any customized path from within the application.
         if ($this->input->hasOption('path') && $this->option('path')) {
             return collect($this->option('path'))->map(function ($path) {
-                return ! $this->usingRealPath() ? $this->laravel->basePath().'/'.$path : $path;
+                return ! $this->usingRealPath() ? $this->laravel->basePath().DIRECTORY_SEPARATOR.$path : $path;
             })->all();
         }
 
@@ -125,21 +133,5 @@ class MigrateGenerate extends Command
     protected function getMigrationPath()
     {
         return $this->laravel->databasePath().DIRECTORY_SEPARATOR.'migrations';
-    }
-
-    /**
-     * Get the console command options.
-     *
-     * @return array
-     */
-    protected function getOptions()
-    {
-        return [
-            ['database', null, InputOption::VALUE_OPTIONAL, 'The database connection to use'],
-
-            ['path', null, InputOption::VALUE_OPTIONAL, 'The path to the migrations files to use'],
-
-            ['realpath', null, InputOption::VALUE_NONE, 'Indicate any provided migration file paths are pre-resolved absolute paths'],
-        ];
     }
 }

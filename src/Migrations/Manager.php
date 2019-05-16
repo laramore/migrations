@@ -10,25 +10,25 @@
 
 namespace Laramore\Migrations;
 
-use Laramore\Meta;
 use Illuminate\Filesystem\Filesystem;
+use Laramore\Facades\MetaManager;
 use Laramore\Fields\Foreign;
+use Laramore\Meta;
 use Illuminate\Support\Str;
 use DB;
 
 class Manager
 {
     protected $path;
+    protected $counter;
     protected $actualNodes;
     protected $wantedNodes;
     protected $missingNodes;
-    protected $counter = 0;
-
-    protected static $tableMetas;
 
     public function __construct()
     {
         $this->path = base_path('database'.DIRECTORY_SEPARATOR.'migrations');
+        $this->counter = count(app('migrator')->getMigrationFiles($this->path));
 
         $this->loadWantedNodes();
         $this->loadActualNodes();
@@ -72,12 +72,8 @@ class Manager
     protected function loadWantedNodes()
     {
         $wantedNodes = [];
-        static::$tableMetas = [];
 
-        foreach (Meta::getMetas()->toArray() as $meta) {
-            $tableName = $meta->getTableName();
-            static::$tableMetas[$tableName] = $meta;
-
+        foreach (MetaManager::getMetas() as $meta) {
             $nodes = $this->getNodesFromMeta($meta);
 
             if (count($nodes)) {
@@ -129,16 +125,6 @@ class Manager
     public function getDatabaseFields()
     {
         return $this->getFieldsFromNodes($this->actualNodes);
-    }
-
-    public static function getTableMetas()
-    {
-        return static::$tableMetas;
-    }
-
-    public static function getTableMeta(string $tableName)
-    {
-        return static::$tableMetas[$tableName];
     }
 
     protected function generateMigrationFile($viewName, $data, $path)

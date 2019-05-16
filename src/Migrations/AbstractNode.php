@@ -10,6 +10,8 @@
 
 namespace Laramore\Migrations;
 
+use Laramore\Facades\MetaManager;
+
 abstract class AbstractNode
 {
     protected $nodes = [];
@@ -189,7 +191,7 @@ abstract class AbstractNode
                         $passedTables[] = $commonTable;
                     }
 
-                    $packNode = new MetaNode($subNodes, Manager::getTableMeta($commonTable), $metaType);
+                    $packNode = new MetaNode($subNodes, MetaManager::getMetaFromTableName($commonTable), $metaType);
 
                     // Do not handle the just created node.
                     $i -= (count($subNodes) - 1);
@@ -204,7 +206,7 @@ abstract class AbstractNode
             }
         }
 
-        if (!is_null($firstIndex) && $firstIndex !== 0) {
+        if (!is_null($firstIndex)) {
             $subNodes = array_slice($this->nodes, $firstIndex, ($nbrOfNodes - $firstIndex));
 
             if (in_array($commonTable, $passedTables)) {
@@ -213,7 +215,7 @@ abstract class AbstractNode
                 $metaType = 'create';
             }
 
-            $packNode = new MetaNode($subNodes, Manager::getTableMeta($commonTable), $metaType);
+            $packNode = new MetaNode($subNodes, MetaManager::getMetaFromTableName($commonTable), $metaType);
 
             $this->removeNodes($firstIndex, $nbrOfNodes);
             $this->insertNode($packNode->organize()->optimize(), $firstIndex);
