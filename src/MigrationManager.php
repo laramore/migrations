@@ -178,7 +178,7 @@ class MigrationManager
 
         $data = [
             'date' => now(),
-            'model' => $model = $meta->getModelClassName(),
+            'model' => $meta->getModelClass(),
             'type' => $type,
             'table' => $table = $meta->getTableName(),
             'up' => $metaNode->getUp(),

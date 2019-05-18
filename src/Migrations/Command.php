@@ -10,7 +10,7 @@
 
 namespace Laramore\Migrations;
 
-class Command
+class Command extends AbstractCommand
 {
     protected $meta;
     protected $tableName;
@@ -65,7 +65,7 @@ class Command
         return $this->getTableName().'.'.$this->getAttname();
     }
 
-    public function getReverse()
+    protected function generateReverse(): AbstractCommand
     {
         return new Command($this->getTableName(), 'dropColumn', $this->getAttname(), []);
     }

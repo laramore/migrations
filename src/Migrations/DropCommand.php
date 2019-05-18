@@ -14,11 +14,12 @@ class DropCommand extends Command
 {
     protected $key;
 
-    public function __construct(string $tableName, string $type, string $attname, string $key, array $properties=[])
+    public function __construct(string $tableName, string $type, string $attname, string $key, Command $reversedCommand)
     {
-        parent::__construct($tableName, $type, $attname, $properties);
+        parent::__construct($tableName, $type, $attname, []);
 
         $this->key = $key;
+        $this->reverse = $reversedCommand;
     }
 
     public function getProperties()
@@ -26,10 +27,5 @@ class DropCommand extends Command
         return array_merge([
             $this->type => $this->key,
         ], $this->properties);
-    }
-
-    public function getReverse()
-    {
-        return null;
     }
 }

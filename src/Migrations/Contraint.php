@@ -12,7 +12,7 @@ namespace Laramore\Migrations;
 
 use Laramore\Meta;
 
-class Contraint
+class Contraint extends AbstractCommand
 {
     protected $tableName;
     protected $needs;
@@ -73,8 +73,8 @@ class Contraint
         return str_replace(['-', '.'], '_', strtolower($this->getTableName().'_'.$this->getAttname().'_foreign'));
     }
 
-    public function getReverse()
+    protected function generateReverse(): AbstractCommand
     {
-        return new DropCommand($this->getTableName(), 'dropForeign', $this->getAttname(), $this->getIndexName());
+        return new DropCommand($this->getTableName(), 'dropForeign', $this->getAttname(), $this->getIndexName(), $this->getCommand());
     }
 }

@@ -277,8 +277,13 @@ class Node extends AbstractNode
                     unset($nodes[$key]);
 
                     if ((count($newProperties) + count($oldProperties))) {
+                        $dropNode = $node->getReverse();
+                        $reversedCommand = $dropNode->getReverse();
+                        $dropNode->setReverse($contraint->getReverse());
+                        $contraint->setReverse($reversedCommand);
+
                         return [
-                            $node->getReverse(),
+                            $dropNode,
                             $contraint,
                         ];
                     } else {
