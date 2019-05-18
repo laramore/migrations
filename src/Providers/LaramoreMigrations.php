@@ -11,7 +11,7 @@
 namespace Laramore\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Laramore\Migrations\Manager;
+use Laramore\MigrationManager;
 
 class LaramoreMigrations extends ServiceProvider
 {
@@ -30,7 +30,7 @@ class LaramoreMigrations extends ServiceProvider
         ]);
 
         $this->app->singleton('MigrationManager', function() {
-            return new Manager;
+            return new MigrationManager;
         });
     }
 }

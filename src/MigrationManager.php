@@ -8,31 +8,33 @@
  * @license MIT
  */
 
-namespace Laramore\Migrations;
+namespace Laramore;
 
 use Illuminate\Filesystem\Filesystem;
 use Laramore\Facades\MetaManager;
 use Laramore\Fields\Foreign;
-use Laramore\Meta;
+use Laramore\Migrations\{
+    Command, Contraint, DatabaseNode, MetaNode, Node
+};
 use Illuminate\Support\Str;
 use DB;
 
-class Manager
+class MigrationManager
 {
     protected $path;
     protected $counter;
-    protected $actualNodes;
-    protected $wantedNodes;
-    protected $missingNodes;
+    protected $actualNode;
+    protected $wantedNode;
+    protected $missingNode;
 
     public function __construct()
     {
         $this->path = base_path('database'.DIRECTORY_SEPARATOR.'migrations');
         $this->counter = count(app('migrator')->getMigrationFiles($this->path));
 
-        $this->loadWantedNodes();
-        $this->loadActualNodes();
-        $this->loadMissingNodes();
+        $this->loadWantedNode();
+        $this->loadActualNode();
+        $this->loadMissingNode();
     }
 
     protected function getNodesFromMeta(Meta $meta)
@@ -69,41 +71,56 @@ class Manager
         return $nodes;
     }
 
-    protected function loadWantedNodes()
+    protected function loadWantedNode()
     {
-        $wantedNodes = [];
+        $wantedNode = [];
 
         foreach (MetaManager::getMetas() as $meta) {
             $nodes = $this->getNodesFromMeta($meta);
 
             if (count($nodes)) {
-                $wantedNodes[] = new MetaNode($nodes, $meta);
+                $wantedNode[] = new MetaNode($nodes, $meta);
             }
         }
 
-        $this->wantedNodes = new Node($wantedNodes);
-        $this->wantedNodes->organize()->optimize();
+        $this->wantedNode = new Node($wantedNode);
+        $this->wantedNode->organize()->optimize();
     }
 
-    protected function loadActualNodes()
+    protected function loadActualNode()
     {
         $doctrine = DB::connection()->getDoctrineSchemaManager();
         $unvalidTable = config('database.migrations');
-        $actualNodes = [];
+        $actualNode = [];
 
         foreach ($doctrine->listTables() as $table) {
             if ($table->getName() !== $unvalidTable) {
-                $actualNodes[] = new DatabaseNode($table);
+                $actualNode[] = new DatabaseNode($table);
             }
         }
 
-        $this->actualNodes = new Node($actualNodes);
-        $this->actualNodes->organize()->optimize();
+        $this->actualNode = new Node($actualNode);
+        $this->actualNode->organize()->optimize();
     }
 
-    protected function loadMissingNodes()
+    protected function loadMissingNode()
     {
-        $this->missingNodes = $this->wantedNodes->diff($this->actualNodes);
+        $this->missingNode = $this->wantedNode->diff($this->actualNode);
+    }
+
+    public function getWantedNode()
+    {
+        return $this->wantedNode;
+    }
+
+    public function getActualNode()
+    {
+        return $this->actualNode;
+    }
+
+    public function getMissingNode()
+    {
+        return $this->missingNode;
     }
 
     protected function getFieldsFromNodes(array $nodes)
@@ -119,12 +136,12 @@ class Manager
 
     public function getDefinedFields()
     {
-        return $this->getFieldsFromNodes($this->wantedNodes);
+        return $this->getFieldsFromNodes($this->wantedNode);
     }
 
     public function getDatabaseFields()
     {
-        return $this->getFieldsFromNodes($this->actualNodes);
+        return $this->getFieldsFromNodes($this->actualNode);
     }
 
     protected function generateMigrationFile($viewName, $data, $path)
@@ -149,17 +166,16 @@ class Manager
     protected function generateMigration(MetaNode $metaNode)
     {
         $meta = $metaNode->getMeta();
+        $type = $metaNode->getType();
 
         $data = [
             'date' => now(),
-            'type' => ($type = $metaNode->getType()) === 'update' ? 'table' : $type,
             'model' => $model = $meta->getModelClassName(),
+            'type' => $type,
             'table' => $table = $meta->getTableName(),
+            'up' => $metaNode->getUp(),
+            'down' => $metaNode->getDown(),
             'name' => $name = ucfirst($type).ucfirst($table).'Table',
-            'fields' => $metaNode->getFieldNodes(),
-            'contraints' => array_map(function ($contraint) {
-                return $contraint->getCommand();
-            }, $metaNode->getContraintNodes()),
         ];
 
         $fileName = date('Y_m_d_').$this->getCounter().'_'.Str::snake($name);
@@ -178,7 +194,7 @@ class Manager
     {
         $generatedFiles = [];
 
-        foreach ($this->missingNodes->getNodes() as $node) {
+        foreach ($this->missingNode->getNodes() as $node) {
             $generatedFiles[] = $this->generateMigration($node);
         }
 

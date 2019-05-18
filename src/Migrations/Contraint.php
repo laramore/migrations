@@ -37,7 +37,7 @@ class Contraint
 
     public function getAttname()
     {
-        return $this->attname;
+        return $this->command->getAttname();
     }
 
     public function getCommand()
@@ -59,5 +59,22 @@ class Contraint
         }
 
         return array_unique($fields);
+    }
+
+    /**
+     * Create a default index name for the table.
+     *
+     * @param  string $type
+     * @param  array  $columns
+     * @return string
+     */
+    protected function getIndexName()
+    {
+        return str_replace(['-', '.'], '_', strtolower($this->getTableName().'_'.$this->getAttname().'_foreign'));
+    }
+
+    public function getReverse()
+    {
+        return new Command($this->getTableName(), 'dropForeign', $this->getIndexName(), []);
     }
 }

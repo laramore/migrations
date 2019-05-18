@@ -41,6 +41,11 @@ class Command
         return $this->attname;
     }
 
+    public function getType()
+    {
+        return $this->type;
+    }
+
     public function getProperties()
     {
         return array_merge([

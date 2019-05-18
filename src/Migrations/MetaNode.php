@@ -10,7 +10,9 @@
 
 namespace Laramore\Migrations;
 
-use Laramore\Meta;
+use Laramore\{
+    Meta, MigrationManager
+};
 
 class MetaNode extends AbstractNode
 {
@@ -63,6 +65,27 @@ class MetaNode extends AbstractNode
     public function getContraintNodes(): array
     {
         return $this->organize()->contraints;
+    }
+
+    public function getContraintCommands(): array
+    {
+        return array_map(function ($contraint) {
+            return $contraint->getCommand();
+        }, $this->getContraintNodes());
+    }
+
+    public function getFieldReverseCommands(): array
+    {
+        return array_map(function ($contraint) {
+            return $contraint->getReverse();
+        }, $this->getFieldNodes());
+    }
+
+    public function getContraintReverseCommands(): array
+    {
+        return array_map(function ($contraint) {
+            return $contraint->getReverse();
+        }, $this->getContraintNodes());
     }
 
     public function getMeta(): Meta
@@ -119,6 +142,63 @@ class MetaNode extends AbstractNode
 
         if (count($unorderedNodes) !== count($this->nodes)) {
             throw new \Exception('Some commands are not meant to be created by this meta');
+        }
+    }
+
+    public function getUp()
+    {
+        switch ($this->getType()) {
+            case 'create':
+                return [
+                    'type' => 'create',
+                    'fields' => $this->getFieldNodes(),
+                    'contraints' => $this->getContraintCommands(),
+                ];
+
+            case 'delete':
+                return [
+                    'type' => 'delete',
+                    'command' => 'dropIfExists',
+                ];
+
+            case 'update':
+            default:
+                return [
+                    'type' => 'update',
+                    'fields' => $this->getFieldNodes(),
+                    'contraints' => $this->getContraintCommands(),
+                ];
+        }
+    }
+
+    public function getDown()
+    {
+        switch ($this->getType()) {
+            case 'create':
+                return [
+                    'type' => 'create',
+                    'command' => 'dropIfExists',
+                ];
+
+            case 'delete':
+                foreach (MigrationManager::getWantedNode()->getNodes() as $metaNode) {
+                    if ($metaNode->getTableName() === $this->getTableName()) {
+                        return [
+                            'type' => 'delete',
+                            'fields' => $metaNode->getFieldReverseNodes(),
+                            'contraints' => $metaNode->getContraintReverseCommands(),
+                        ];
+                    }
+                }
+                throw new \Exception('Unexpected error');
+
+            case 'update':
+            default:
+                return [
+                    'type' => 'update',
+                    'fields' => $this->getFieldReverseCommands(),
+                    'contraints' => $this->getContraintReverseCommands(),
+                ];
         }
     }
 }

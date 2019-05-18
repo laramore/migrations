@@ -19,17 +19,11 @@ class {{ $name }} extends Migration
      */
     public function up()
     {
-        Schema::{{ $type }}({!! json_encode($table) !!}, function (Blueprint {{ $blueprintVar }}) {
-@if (count($fields))
-            @include('laramore::migration.partials.commands', ['commands' => $fields])
+@if ($type === 'delete')
+        @include('laramore::migration.line', $up)
+@else
+        @include('laramore::migration.block', $up)
 @endif
-@if (count($fields) && count($contraints))
-
-@endif
-@if (count($contraints))
-            @include('laramore::migration.partials.commands', ['commands' => $contraints])
-@endif
-        });
     }
 
     /**
@@ -39,6 +33,10 @@ class {{ $name }} extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists({!! json_encode($table) !!});
+@if ($type === 'create')
+        @include('laramore::migration.line', $down)
+@else
+        @include('laramore::migration.block', $down)
+@endif
     }
 }
