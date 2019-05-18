@@ -267,7 +267,10 @@ class Node extends AbstractNode
 
                 if ($nodeCommand->getField() === $command->getField()) {
                     if ((count(array_diff($nodeCommand->getProperties(), $command->getProperties())) + count(array_diff($command->getProperties(), $nodeCommand->getProperties())))) {
-                        throw new \Exception('Calculate the diff.');
+                        return [
+                            $node->getReverse(),
+                            $contraint,
+                        ];
                     } else {
                         return null;
                     }
@@ -292,7 +295,11 @@ class Node extends AbstractNode
             }
 
             if ($resultedNode) {
-                $diffNodes[] = $resultedNode;
+                if (is_array($resultedNode)) {
+                    $diffNodes = array_merge($diffNodes, $resultedNode);
+                } else {
+                    $diffNodes[] = $resultedNode;
+                }
             }
         }
 

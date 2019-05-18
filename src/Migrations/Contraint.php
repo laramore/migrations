@@ -75,6 +75,6 @@ class Contraint
 
     public function getReverse()
     {
-        return new Command($this->getTableName(), 'dropForeign', $this->getIndexName(), []);
+        return new DropCommand($this->getTableName(), 'dropForeign', $this->getAttname(), $this->getIndexName());
     }
 }

@@ -64,4 +64,9 @@ class Command
     {
         return $this->getTableName().'.'.$this->getAttname();
     }
+
+    public function getReverse()
+    {
+        return new Command($this->getTableName(), 'dropColumn', $this->getAttname(), []);
+    }
 }
