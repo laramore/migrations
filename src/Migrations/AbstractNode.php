@@ -10,7 +10,9 @@
 
 namespace Laramore\Migrations;
 
-use Laramore\Facades\MetaManager;
+use Laramore\Facades\{
+    MetaManager, MigrationManager
+};
 
 abstract class AbstractNode
 {
@@ -59,11 +61,6 @@ abstract class AbstractNode
     public function getTableNames(): array
     {
         return $this->tableNames;
-    }
-
-    public function getTableMetas(): array
-    {
-        return $this->tableMetas;
     }
 
     public function getFields(): array
@@ -162,11 +159,13 @@ abstract class AbstractNode
 
     public function pack()
     {
-        $nbrOfNodes = count($this->getNodes());
-
         $firstIndex = null;
         $commonTable = null;
-        $passedTables = [];
+
+        $nbrOfNodes = count($this->getNodes());
+        $passedTables = array_map(function ($node) {
+            return $node->getTableName();
+        }, MigrationManager::getActualNode()->getNodes());
 
         for ($i = 0; $i < $nbrOfNodes; $i++) {
             $node = $this->getNodes()[$i];

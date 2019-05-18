@@ -11,6 +11,7 @@
 namespace Laramore\Migrations;
 
 use Illuminate\Support\Facades\Schema;
+use Laramore\Facades\MetaManager;
 use Doctrine\DBAL\Schema\{
     Table, Column, ForeignKeyConstraint, Index
 };
@@ -169,7 +170,7 @@ class DatabaseNode extends AbstractNode
 
     public function getMeta(): Meta
     {
-        return $this->tableMetas[$this->getTableName()];
+        return MetaManager::getMetaFromTableName($this->getTableName());
     }
 
     public function getTableName(): string

@@ -10,9 +10,10 @@
 
 namespace Laramore\Migrations;
 
-use Laramore\{
-    Meta, MigrationManager
+use Laramore\Facades\{
+    MetaManager, MigrationManager
 };
+use Laramore\Meta;
 
 class MetaNode extends AbstractNode
 {
@@ -25,7 +26,6 @@ class MetaNode extends AbstractNode
     public function __construct(array $nodes=[], Meta $meta, string $type='create')
     {
         $this->tableNames = [$meta->getTableName()];
-        $this->tableMetas[$this->getTableName()] = $meta;
         $this->type = $type;
 
         $this->setNodes($nodes);
@@ -76,21 +76,21 @@ class MetaNode extends AbstractNode
 
     public function getFieldReverseCommands(): array
     {
-        return array_map(function ($contraint) {
+        return array_filter(array_map(function ($contraint) {
             return $contraint->getReverse();
-        }, $this->getFieldNodes());
+        }, $this->getFieldNodes()));
     }
 
     public function getContraintReverseCommands(): array
     {
-        return array_map(function ($contraint) {
+        return array_filter(array_map(function ($contraint) {
             return $contraint->getReverse();
-        }, $this->getContraintNodes());
+        }, $this->getContraintNodes()));
     }
 
     public function getMeta(): Meta
     {
-        return $this->tableMetas[$this->getTableName()];
+        return MetaManager::getMetaFromTableName($this->getTableName());
     }
 
     public function getTableName(): string
@@ -125,16 +125,18 @@ class MetaNode extends AbstractNode
 
     protected function optimizing()
     {
+        $fields = $this->getMeta()->getFields();
         $nbrOfNodes = count($this->getNodes());
         $unorderedNodes = $this->nodes;
         $this->nodes = [];
 
-        foreach ($this->getMeta()->getFields() as $field) {
-            $attname = $field->attname;
+        foreach ($unorderedNodes as $node) {
+            $attname = $node->getAttname();
 
-            foreach ($unorderedNodes as $node) {
-                if ($node->getAttname() === $attname) {
+            foreach ($fields as $field) {
+                if ($field->attname === $attname) {
                     $this->nodes[] = $node;
+
                     break;
                 }
             }

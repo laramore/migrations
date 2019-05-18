@@ -31,10 +31,6 @@ class MigrationManager
     {
         $this->path = base_path('database'.DIRECTORY_SEPARATOR.'migrations');
         $this->counter = count(app('migrator')->getMigrationFiles($this->path));
-
-        $this->loadWantedNode();
-        $this->loadActualNode();
-        $this->loadMissingNode();
     }
 
     protected function getNodesFromMeta(Meta $meta)
@@ -105,21 +101,33 @@ class MigrationManager
 
     protected function loadMissingNode()
     {
-        $this->missingNode = $this->wantedNode->diff($this->actualNode);
+        $this->missingNode = $this->getWantedNode()->diff($this->getActualNode());
     }
 
     public function getWantedNode()
     {
+        if (is_null($this->wantedNode)) {
+            $this->loadWantedNode();
+        }
+
         return $this->wantedNode;
     }
 
     public function getActualNode()
     {
+        if (is_null($this->actualNode)) {
+            $this->loadActualNode();
+        }
+
         return $this->actualNode;
     }
 
     public function getMissingNode()
     {
+        if (is_null($this->missingNode)) {
+            $this->loadMissingNode();
+        }
+
         return $this->missingNode;
     }
 
@@ -136,12 +144,12 @@ class MigrationManager
 
     public function getDefinedFields()
     {
-        return $this->getFieldsFromNodes($this->wantedNode);
+        return $this->getFieldsFromNodes($this->getWantedNode());
     }
 
     public function getDatabaseFields()
     {
-        return $this->getFieldsFromNodes($this->actualNode);
+        return $this->getFieldsFromNodes($this->getActualNode());
     }
 
     protected function generateMigrationFile($viewName, $data, $path)
@@ -194,7 +202,7 @@ class MigrationManager
     {
         $generatedFiles = [];
 
-        foreach ($this->missingNode->getNodes() as $node) {
+        foreach ($this->getMissingNode()->getNodes() as $node) {
             $generatedFiles[] = $this->generateMigration($node);
         }
 
