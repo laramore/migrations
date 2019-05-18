@@ -12,10 +12,6 @@ namespace Laramore\Migrations;
 
 class DropCommand extends Command
 {
-    protected $meta;
-    protected $tableName;
-    protected $type;
-    protected $attname;
     protected $key;
 
     public function __construct(string $tableName, string $type, string $attname, string $key, array $properties=[])

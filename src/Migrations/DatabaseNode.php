@@ -10,7 +10,6 @@
 
 namespace Laramore\Migrations;
 
-use Illuminate\Support\Facades\Schema;
 use Laramore\Facades\MetaManager;
 use Doctrine\DBAL\Schema\{
     Table, Column, ForeignKeyConstraint, Index
@@ -99,9 +98,7 @@ class DatabaseNode extends AbstractNode
         $properties = [];
 
         if ($length = $column->getLength()) {
-            if ($length !== Schema::getFacadeRoot()::$defaultStringLength) {
-                $properties['length'] = $length;
-            }
+            $properties['length'] = $length;
         }
 
         if (!$column->getNotnull()) {

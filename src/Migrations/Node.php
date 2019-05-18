@@ -242,12 +242,17 @@ class Node extends AbstractNode
         $this->pack();
     }
 
-    protected function getResultedCommand(array $nodes, Command $command)
+    protected function getResultedCommand(array &$nodes, Command $command)
     {
-        foreach ($nodes as $node) {
+        foreach ($nodes as $key => $node) {
             if ($node instanceof Command && $node->getField() === $command->getField()) {
-                if ((count(array_diff($node->getProperties(), $command->getProperties())) + count(array_diff($command->getProperties(), $node->getProperties())))) {
-                    throw new \Exception('Calculate the diff.');
+                $oldProperties = array_diff($node->getProperties(), $command->getProperties());
+                $newProperties = array_diff($command->getProperties(), $node->getProperties());
+
+                unset($nodes[$key]);
+
+                if ((count($newProperties) + count($oldProperties))) {
+                    return new ChangeCommand($command->getTableName(), $command->getType(), $command->getAttname(), $newProperties, $oldProperties);
                 } else {
                     return null;
                 }
@@ -257,16 +262,21 @@ class Node extends AbstractNode
         return $command;
     }
 
-    protected function getResultedContraint(array $nodes, Contraint $contraint)
+    protected function getResultedContraint(array &$nodes, Contraint $contraint)
     {
         $command = $contraint->getCommand();
 
-        foreach ($nodes as $node) {
+        foreach ($nodes as $key => $node) {
             if ($node instanceof Contraint) {
                 $nodeCommand = $node->getCommand();
 
                 if ($nodeCommand->getField() === $command->getField()) {
-                    if ((count(array_diff($nodeCommand->getProperties(), $command->getProperties())) + count(array_diff($command->getProperties(), $nodeCommand->getProperties())))) {
+                    $oldProperties = array_diff($nodeCommand->getProperties(), $command->getProperties());
+                    $newProperties = array_diff($command->getProperties(), $nodeCommand->getProperties());
+
+                    unset($nodes[$key]);
+
+                    if ((count($newProperties) + count($oldProperties))) {
                         return [
                             $node->getReverse(),
                             $contraint,
