@@ -81,16 +81,16 @@ class Node extends AbstractNode
 
             if ($nodeToMove instanceof Contraint) {
                 $neededFields = $nodeToMove->getFields();
-                $missingFields = array_diff($neededFields, $fields);
+                $missingFields = $this->arrayRecursiveDiff($neededFields, $fields);
 
                 if ($missingFieldsCount = count($missingFields)) {
                     for ($j = ($i + 1); $j < $nbrOfNodes; $j++) {
                         $nodeToCheck = $this->getNodes()[$j];
 
                         if ($nodeToCheck instanceof Command) {
-                            $missingFields = array_diff($missingFields, [$nodeToCheck->getField()]);
+                            $missingFields = $this->arrayRecursiveDiff($missingFields, [$nodeToCheck->getField()]);
                         } else if ($nodeToCheck instanceof AbstractNode) {
-                            $missingFields = array_diff($missingFields, $nodeToCheck->getFields());
+                            $missingFields = $this->arrayRecursiveDiff($missingFields, $nodeToCheck->getFields());
                         }
 
                         if (count($missingFields) === 0) {
@@ -242,16 +242,44 @@ class Node extends AbstractNode
         $this->pack();
     }
 
+    protected function arrayRecursiveDiff($aArray1, $aArray2)
+    {
+        $aReturn = [];
+
+        foreach ($aArray1 as $mKey => $mValue) {
+            if (array_key_exists($mKey, $aArray2)) {
+                if (is_array($mValue)) {
+                    $aRecursiveDiff = $this->arrayRecursiveDiff($mValue, $aArray2[$mKey]);
+                    if (count($aRecursiveDiff)) {
+                        $aReturn[$mKey] = $aRecursiveDiff;
+                    }
+                } else {
+                    if ($mValue != $aArray2[$mKey]) {
+                        $aReturn[$mKey] = $mValue;
+                    }
+                }
+            } else {
+                $aReturn[$mKey] = $mValue;
+            }
+        }
+
+        return $aReturn;
+    }
+
     protected function getResultedCommand(array &$nodes, Command $command)
     {
         foreach ($nodes as $key => $node) {
             if ($node instanceof Command && $node->getField() === $command->getField()) {
-                $oldProperties = array_diff($node->getProperties(), $command->getProperties());
-                $newProperties = array_diff($command->getProperties(), $node->getProperties());
+                $oldProperties = $this->arrayRecursiveDiff($node->getProperties(), $command->getProperties());
+                $newProperties = $this->arrayRecursiveDiff($command->getProperties(), $node->getProperties());
 
                 unset($nodes[$key]);
 
-                if ((count($newProperties) + count($oldProperties))) {
+                if ($count = (count($newProperties) + count($oldProperties))) {
+                    if ($count === 2 && count(array_diff([$node->getType(), $command->getType()], ['datetime', 'timestamp'])) === 0) {
+                        return null;
+                    }
+
                     return new ChangeCommand($command->getTableName(), $command->getType(), $command->getAttname(), $newProperties, $oldProperties);
                 } else {
                     return null;
@@ -270,9 +298,9 @@ class Node extends AbstractNode
             if ($node instanceof Contraint) {
                 $nodeCommand = $node->getCommand();
 
-                if ($nodeCommand->getField() === $command->getField()) {
-                    $oldProperties = array_diff($nodeCommand->getProperties(), $command->getProperties());
-                    $newProperties = array_diff($command->getProperties(), $nodeCommand->getProperties());
+                if ($node->getField() === $contraint->getField()) {
+                    $oldProperties = $this->arrayRecursiveDiff($nodeCommand->getProperties(), $command->getProperties());
+                    $newProperties = $this->arrayRecursiveDiff($command->getProperties(), $nodeCommand->getProperties());
 
                     unset($nodes[$key]);
 

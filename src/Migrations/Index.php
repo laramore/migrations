@@ -27,6 +27,18 @@ class Index extends Contraint
         parent::__construct($tableName, [$fields], $needs, []);
     }
 
+    /**
+     * Create a default index name for the table.
+     *
+     * @param  string $type
+     * @param  array  $columns
+     * @return string
+     */
+    protected function getIndexName()
+    {
+        return str_replace(['-', '.'], '_', strtolower($this->getTableName().'_'.implode('_', $this->getAttname()[0]).'_'.$this->contraint));
+    }
+
     public function getField()
     {
         return $this->tableName.'.'.implode('_', $this->getCommand()->getAttname()[0]).'_'.$this->contraint.'+';

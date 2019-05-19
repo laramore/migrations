@@ -12,13 +12,12 @@ namespace Laramore\Migrations;
 
 use Laramore\Facades\MetaManager;
 use Doctrine\DBAL\Schema\{
-    Table, Column, ForeignKeyConstraint, Index
+    Table, Column, ForeignKeyConstraint, Index as DoctrineIndex
 };
 
 class DatabaseNode extends AbstractNode
 {
     protected $nodes = [];
-    protected $contraints = [];
     protected $organized = true;
     protected $optimized = true;
 
@@ -45,7 +44,7 @@ class DatabaseNode extends AbstractNode
         }, array_values($nodes));
     }
 
-    protected function setIndexCommand(Command $command, Index $index)
+    protected function setIndexCommand(Command $command, DoctrineIndex $index)
     {
         if ($index->isPrimary()) {
             foreach ($command->getProperties() as $key => $value) {
@@ -67,13 +66,27 @@ class DatabaseNode extends AbstractNode
     protected function addIndexes(array $indexes)
     {
         foreach ($indexes as $index) {
-            $attname = $index->getColumns()[0];
+            $columns = $index->getColumns();
 
-            foreach ($this->getNodes() as $node) {
-                if ($node instanceof Command && $node->getAttname() === $attname) {
-                    $this->setIndexCommand($node, $index);
-                    break;
+            if (count($columns) === 1) {
+                $attname = $columns[0];
+
+                foreach ($this->getNodes() as $node) {
+                    if ($node instanceof Command && $node->getAttname() === $attname) {
+                        $this->setIndexCommand($node, $index);
+                        break;
+                    }
                 }
+            } else {
+                if ($index->isPrimary()) {
+                    $type = 'primary';
+                } else if ($index->isUnique()) {
+                    $type = 'unique';
+                } else {
+                    $type = 'index';
+                }
+
+                $this->nodes[] = new Index($this->getTableName(), $type, $columns);
             }
         }
     }
@@ -158,11 +171,6 @@ class DatabaseNode extends AbstractNode
     public function getFieldNodes(): array
     {
         return $this->nodes;
-    }
-
-    public function getContraintNodes(): array
-    {
-        return $this->contraints;
     }
 
     public function getMeta(): Meta

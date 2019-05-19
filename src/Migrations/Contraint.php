@@ -76,7 +76,7 @@ class Contraint extends AbstractCommand
      */
     protected function getIndexName()
     {
-        return str_replace(['-', '.'], '_', strtolower($this->getTableName().'_'.implode('_', (array) $this->getAttname()).'_'.$this->contraint));
+        return str_replace(['-', '.'], '_', strtolower($this->getTableName().'_'.$this->getAttname().'_'.$this->contraint));
     }
 
     protected function generateReverse(): AbstractCommand
