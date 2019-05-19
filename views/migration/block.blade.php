@@ -8,4 +8,10 @@ Schema::{{ $type === 'create' ? $type : 'table' }}({!! json_encode($table) !!}, 
 @if (count($contraints))
 	        @include('laramore::migration.partials.commands', ['commands' => $contraints])
 @endif
+@if ((count($fields) + count($contraints)) && count($indexes))
+
+@endif
+@if (count($indexes))
+	        @include('laramore::migration.partials.commands', ['commands' => $indexes])
+@endif
         });

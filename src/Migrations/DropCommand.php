@@ -14,7 +14,7 @@ class DropCommand extends Command
 {
     protected $key;
 
-    public function __construct(string $tableName, string $type, string $attname, string $key, Command $reversedCommand)
+    public function __construct(string $tableName, string $type, $attname, string $key, Command $reversedCommand)
     {
         parent::__construct($tableName, $type, $attname, []);
 

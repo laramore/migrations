@@ -20,6 +20,7 @@ class MetaNode extends AbstractNode
     protected $type;
     protected $nodes = [];
     protected $contraints = [];
+    protected $indexes = [];
     protected $organized = false;
     protected $optimized = false;
 
@@ -53,7 +54,8 @@ class MetaNode extends AbstractNode
     {
         return array_merge(
             $this->nodes,
-            $this->contraints
+            $this->contraints,
+            $this->indexes
         );
     }
 
@@ -67,11 +69,23 @@ class MetaNode extends AbstractNode
         return $this->organize()->contraints;
     }
 
+    public function getIndexNodes(): array
+    {
+        return $this->organize()->indexes;
+    }
+
     public function getContraintCommands(): array
     {
         return array_map(function ($contraint) {
             return $contraint->getCommand();
         }, $this->getContraintNodes());
+    }
+
+    public function getIndexCommands(): array
+    {
+        return array_map(function ($index) {
+            return $index->getCommand();
+        }, $this->getIndexNodes());
     }
 
     public function getFieldReverseCommands(): array
@@ -86,6 +100,13 @@ class MetaNode extends AbstractNode
         return array_filter(array_map(function ($contraint) {
             return $contraint->getReverse();
         }, $this->getContraintNodes()));
+    }
+
+    public function getIndexReverseCommands(): array
+    {
+        return array_filter(array_map(function ($index) {
+            return $index->getReverse();
+        }, $this->getIndexNodes()));
     }
 
     public function getMeta(): Meta
@@ -116,7 +137,12 @@ class MetaNode extends AbstractNode
             $node = $this->getNodes()[$i];
 
             if ($node instanceof Contraint) {
-                $this->contraints[] = $node;
+                if ($node instanceof Index) {
+                    $this->indexes[] = $node;
+                } else {
+                    $this->contraints[] = $node;
+                }
+
                 $this->removeNode($i--);
                 $nbrOfNodes--;
             }
@@ -155,6 +181,7 @@ class MetaNode extends AbstractNode
                     'type' => 'create',
                     'fields' => $this->getFieldNodes(),
                     'contraints' => $this->getContraintCommands(),
+                    'indexes' => $this->getIndexCommands(),
                 ];
 
             case 'delete':
@@ -169,6 +196,7 @@ class MetaNode extends AbstractNode
                     'type' => 'update',
                     'fields' => $this->getFieldNodes(),
                     'contraints' => $this->getContraintCommands(),
+                    'indexes' => $this->getIndexCommands(),
                 ];
         }
     }
@@ -189,6 +217,7 @@ class MetaNode extends AbstractNode
                             'type' => 'delete',
                             'fields' => $metaNode->getFieldReverseNodes(),
                             'contraints' => $metaNode->getContraintReverseCommands(),
+                            'indexes' => $metaNode->getIndexReverseCommands(),
                         ];
                     }
                 }
@@ -200,6 +229,7 @@ class MetaNode extends AbstractNode
                     'type' => 'update',
                     'fields' => $this->getFieldReverseCommands(),
                     'contraints' => $this->getContraintReverseCommands(),
+                    'indexes' => $this->getIndexReverseCommands(),
                 ];
         }
     }

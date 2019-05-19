@@ -14,7 +14,7 @@ use Illuminate\Filesystem\Filesystem;
 use Laramore\Facades\MetaManager;
 use Laramore\Fields\Foreign;
 use Laramore\Migrations\{
-    Command, Contraint, DatabaseNode, MetaNode, Node
+    Command, Contraint, DatabaseNode, MetaNode, Node, Index
 };
 use Illuminate\Support\Str;
 use DB;
@@ -62,6 +62,24 @@ class MigrationManager
 
                 $nodes[] = new Contraint($tableName, $attname, $needs, $properties);
             }
+        }
+
+        if (is_array($primaries = $meta->getPrimary())) {
+            $nodes[] = new Index($tableName, 'primary', array_map(function ($field) {
+                return $field->attname;
+            }, $primaries));
+        }
+
+        foreach ($meta->getUniques() as $unique) {
+            $nodes[] = new Index($tableName, 'unique', array_map(function ($field) {
+                return $field->attname;
+            }, $unique));
+        }
+
+        foreach ($meta->getIndexes() as $index) {
+            $nodes[] = new Index($tableName, 'index', array_map(function ($field) {
+                return $field->attname;
+            }, $index));
         }
 
         return $nodes;

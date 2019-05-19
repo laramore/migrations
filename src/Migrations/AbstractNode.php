@@ -83,10 +83,8 @@ abstract class AbstractNode
         $fields = [];
 
         foreach ($this->getNodes() as $node) {
-            if ($node instanceof Command) {
+            if ($node instanceof AbstractCommand) {
                 $fields[] = $node->getField();
-            } else if ($node instanceof Contraint) {
-                $fields[] = $node->getCommand()->getField().'*';
             } else {
                 $fields = array_merge($fields, $node->getFieldsAndContraints());
             }

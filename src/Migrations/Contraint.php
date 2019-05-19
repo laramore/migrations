@@ -17,12 +17,13 @@ class Contraint extends AbstractCommand
     protected $tableName;
     protected $needs;
     protected $command;
+    protected $contraint = 'foreign';
 
-    public function __construct(string $tableName, string $attname, array $needs, array $properties)
+    public function __construct(string $tableName, $attname, array $needs, array $properties)
     {
         $this->tableName = $tableName;
         $this->needs = $needs;
-        $this->command = new Command($tableName, 'foreign', $attname, $properties);
+        $this->command = new Command($tableName, $this->contraint, $attname, $properties);
     }
 
     public function getNodes()
@@ -61,6 +62,11 @@ class Contraint extends AbstractCommand
         return array_unique($fields);
     }
 
+    public function getField()
+    {
+        return $this->getCommand()->getField().'*';
+    }
+
     /**
      * Create a default index name for the table.
      *
@@ -70,11 +76,11 @@ class Contraint extends AbstractCommand
      */
     protected function getIndexName()
     {
-        return str_replace(['-', '.'], '_', strtolower($this->getTableName().'_'.$this->getAttname().'_foreign'));
+        return str_replace(['-', '.'], '_', strtolower($this->getTableName().'_'.implode('_', (array) $this->getAttname()).'_'.$this->contraint));
     }
 
     protected function generateReverse(): AbstractCommand
     {
-        return new DropCommand($this->getTableName(), 'dropForeign', $this->getAttname(), $this->getIndexName(), $this->getCommand());
+        return new DropCommand($this->getTableName(), 'drop'.ucfirst($this->contraint), $this->getAttname(), $this->getIndexName(), $this->getCommand());
     }
 }

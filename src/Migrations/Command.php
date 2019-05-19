@@ -18,7 +18,7 @@ class Command extends AbstractCommand
     protected $attname;
     protected $properties;
 
-    public function __construct(string $tableName, string $type, string $attname, array $properties)
+    public function __construct(string $tableName, string $type, $attname, array $properties)
     {
         $this->tableName = $tableName;
         $this->type = $type;
@@ -62,7 +62,7 @@ class Command extends AbstractCommand
 
     public function getField()
     {
-        return $this->getTableName().'.'.$this->getAttname();
+        return $this->getTableName().'.'.implode('_', (array) $this->getAttname());
     }
 
     protected function generateReverse(): AbstractCommand
