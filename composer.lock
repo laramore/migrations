@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0dd6ec475ab1dba3f4cd816311122371",
+    "content-hash": "c353807e5e2d44b83c5f102c68d1597f",
     "packages": [
         {
             "name": "doctrine/cache",
@@ -516,16 +516,16 @@
         },
         {
             "name": "laramore/laramore",
-            "version": "dev-master",
+            "version": "v0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laramore/laramore.git",
-                "reference": "aee11daf1fe132dccbe597ed7ada167d4b397cd3"
+                "reference": "27ac76ebb8c713110404b8120e29d8299d6a63af"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laramore/laramore/zipball/aee11daf1fe132dccbe597ed7ada167d4b397cd3",
-                "reference": "aee11daf1fe132dccbe597ed7ada167d4b397cd3",
+                "url": "https://api.github.com/repos/laramore/laramore/zipball/27ac76ebb8c713110404b8120e29d8299d6a63af",
+                "reference": "27ac76ebb8c713110404b8120e29d8299d6a63af",
                 "shasum": ""
             },
             "require": {
@@ -578,7 +578,7 @@
                 "uuid",
                 "validations"
             ],
-            "time": "2019-05-09T18:28:05+00:00"
+            "time": "2019-05-19T02:02:56+00:00"
         },
         {
             "name": "nastuzzi-samy/reflection-namespace",
@@ -1697,9 +1697,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "laramore/laramore": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
