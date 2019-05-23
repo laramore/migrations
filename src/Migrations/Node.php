@@ -54,15 +54,21 @@ class Node extends AbstractNode
         $nbrOfNodes = count($this->getNodes());
 
         for ($i = 0; $i < $nbrOfNodes; $i++) {
-            for ($j = ($i + 1); $j < $nbrOfNodes; $j++) {
-                $node1 = $this->getNodes()[$i];
-                $node2 = $this->getNodes()[$j];
-                $tableNames1 = $this->getMetaContraintTables($node1);
-                $tableNames2 = $this->getMetaContraintTables($node2);
+            $node1 = $this->getNodes()[$i];
+            $tableNames1 = $this->getMetaContraintTables($node1);
 
-                if (count($tableNames1) < count($tableNames2) || (count($tableNames1) === count($tableNames2) && in_array($node2->getTableName(), $tableNames1))) {
-                    $this->swapNodes($i, $j);
+            if (count($tableNames1)) {
+                for ($j = ($i + 1); $j < $nbrOfNodes; $j++) {
+                    $node2 = $this->getNodes()[$j];
+                    $tableNames2 = $this->getMetaContraintTables($node2);
+
+                    if (count($tableNames1) < count($tableNames2) || (count($tableNames1) === count($tableNames2) && in_array($node2->getTableName(), $tableNames1))) {
+                        $this->swapNodes($i, $j);
+                        break;
+                    }
                 }
+            } else {
+                $this->moveNode($i, 0);
             }
         }
     }
