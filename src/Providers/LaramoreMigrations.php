@@ -11,6 +11,7 @@
 namespace Laramore\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\DB;
 use Laramore\Facades\TypeManager;
 use Laramore\MigrationManager;
 
@@ -34,7 +35,12 @@ class LaramoreMigrations extends ServiceProvider
             return new MigrationManager;
         });
 
-        TypeManager::addTypeValue('migration');
+        $this->setType();
+    }
+
+    protected function setType()
+    {
+        TypeManager::addValueName('migration');
 
         if (TypeManager::hasType('increment')) {
             TypeManager::increment()->migration = 'increments';

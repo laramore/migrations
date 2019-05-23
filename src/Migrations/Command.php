@@ -12,7 +12,6 @@ namespace Laramore\Migrations;
 
 class Command extends AbstractCommand
 {
-    protected $meta;
     protected $tableName;
     protected $type;
     protected $attname;
