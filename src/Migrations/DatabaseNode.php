@@ -175,7 +175,7 @@ class DatabaseNode extends AbstractNode
 
     public function getMeta(): Meta
     {
-        return MetaManager::getMetaFromTableName($this->getTableName());
+        return MetaManager::getMetaForTableName($this->getTableName());
     }
 
     public function getTableName(): string

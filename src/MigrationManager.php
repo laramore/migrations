@@ -39,7 +39,7 @@ class MigrationManager
         $tableName = $meta->getTableName();
 
         foreach ($meta->getFields() as $field) {
-            $nodes[] = new Command($tableName, $field->type, $field->attname, $field->getProperties());
+            $nodes[] = new Command($tableName, $field->getType()->migration, $field->getAttname(), $field->getProperties());
         }
 
         foreach ($meta->getComposites() as $composite) {
