@@ -11,8 +11,11 @@
 namespace Laramore;
 
 use Illuminate\Filesystem\Filesystem;
-use Laramore\Facades\MetaManager;
+use Laramore\Facades\{
+    MetaManager, TypeManager
+};
 use Laramore\Fields\Foreign;
+use Laramore\Interfaces\IsAPrimaryField;
 use Laramore\Migrations\{
     Command, Contraint, DatabaseNode, MetaNode, Node, Index
 };
@@ -40,6 +43,10 @@ class MigrationManager
 
         foreach ($meta->getFields() as $field) {
             $nodes[] = new Command($tableName, $field->getType()->migration, $field->getAttname(), $field->getProperties());
+
+            if ($field instanceof IsAPrimaryField && $field->getType() !== TypeManager::getType('increment')) {
+                end($nodes)->setProperty('primary', true);
+            }
         }
 
         foreach ($meta->getComposites() as $composite) {

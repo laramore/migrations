@@ -10,7 +10,9 @@
 
 namespace Laramore\Migrations;
 
-use Laramore\Facades\MetaManager;
+use Laramore\Facades\{
+    MetaManager, TypeManager
+};
 use Doctrine\DBAL\Schema\{
     Table, Column, ForeignKeyConstraint, Index as DoctrineIndex
 };
@@ -49,7 +51,7 @@ class DatabaseNode extends AbstractNode
         if ($index->isPrimary()) {
             foreach ($command->getProperties() as $key => $value) {
                 if ($value === $command->getAttname()) {
-                    if ($key === 'increments') {
+                    if ($key === TypeManager::getType('increment')->migration) {
                         return;
                     } else {
                         $command->setProperty('primary', true);
