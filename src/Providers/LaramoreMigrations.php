@@ -17,6 +17,11 @@ use Laramore\MigrationManager;
 
 class LaramoreMigrations extends ServiceProvider
 {
+    public function register()
+    {
+        $this->app->booting($this->bootingCallback());
+    }
+
     /**
      * Load views
      *
@@ -34,16 +39,16 @@ class LaramoreMigrations extends ServiceProvider
         $this->app->singleton('MigrationManager', function() {
             return new MigrationManager;
         });
-
-        $this->setType();
     }
 
-    protected function setType()
+    protected function bootingCallback()
     {
-        TypeManager::addValueName('migration');
+        return function () {
+            TypeManager::addValueName('migration');
 
-        if (TypeManager::hasType('increment')) {
-            TypeManager::increment()->migration = 'increments';
-        }
+            if (TypeManager::hasType('increment')) {
+                TypeManager::increment()->migration = 'increments';
+            }
+        };
     }
 }
