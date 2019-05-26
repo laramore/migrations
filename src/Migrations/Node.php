@@ -352,6 +352,6 @@ class Node extends AbstractNode
             }
         }
 
-        return (new static($diffNodes))->organize()->optimize();
+        return (new static($diffNodes));
     }
 }

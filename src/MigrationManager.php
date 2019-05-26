@@ -120,6 +120,7 @@ class MigrationManager
     protected function loadMissingNode()
     {
         $this->missingNode = $this->getWantedNode()->diff($this->getActualNode());
+        $this->missingNode->organize()->optimize();
     }
 
     public function getWantedNode()

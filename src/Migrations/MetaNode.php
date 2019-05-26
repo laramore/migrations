@@ -26,8 +26,8 @@ class MetaNode extends AbstractNode
 
     public function __construct(array $nodes=[], Meta $meta, string $type='create')
     {
-        $this->tableNames = [$meta->getTableName()];
         $this->type = $type;
+        $this->tableNames = [$meta->getTableName()];
 
         $this->setNodes($nodes);
     }
@@ -156,11 +156,11 @@ class MetaNode extends AbstractNode
         $unorderedNodes = $this->nodes;
         $this->nodes = [];
 
-        foreach ($unorderedNodes as $node) {
-            $attname = $node->getAttname();
+        foreach ($fields as $field) {
+            $attname = $field->getAttname();
 
-            foreach ($fields as $field) {
-                if ($field->attname === $attname) {
+            foreach ($unorderedNodes as $node) {
+                if ($node->getAttname() === $attname) {
                     $this->nodes[] = $node;
 
                     break;
