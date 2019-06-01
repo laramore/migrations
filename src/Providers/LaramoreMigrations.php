@@ -37,7 +37,7 @@ class LaramoreMigrations extends ServiceProvider
         ]);
 
         $this->app->singleton('MigrationManager', function() {
-            return new MigrationManager;
+            return new MigrationManager($this->app['migrator']);
         });
     }
 

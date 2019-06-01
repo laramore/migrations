@@ -25,15 +25,59 @@ use DB;
 class MigrationManager
 {
     protected $path;
-    protected $counter;
+    protected $migrator;
+    protected $loadingMigrations = false;
+
+    protected $migrationCounter;
+    protected $fileCounter = 0;
+
     protected $actualNode;
     protected $wantedNode;
     protected $missingNode;
 
-    public function __construct()
+    public function __construct(Migrator $migrator)
     {
+        $this->migrator = $migrator;
+
         $this->path = base_path('database'.DIRECTORY_SEPARATOR.'migrations');
-        $this->counter = count(app('migrator')->getMigrationFiles($this->path));
+        $this->migrationFiles = $this->migrator->getMigrationFiles($this->path);
+
+        $this->calculateMigrationCounter();
+    }
+
+    protected function calculateMigrationCounter()
+    {
+        if (count($this->migrationFiles)) {
+            $this->migrationCounter = (((integer) substr(explode('_', end($this->migrationFiles))[3], 0, 3)) + 1);
+        } else {
+            $this->migrationCounter = 0;
+        }
+    }
+
+    protected function getStringCounter(int $counter)
+    {
+        $counter = (string) $counter;
+
+        for ($i = (3 - strlen($counter)); $i > 0; $i--) {
+            $counter = '0'.$counter;
+        }
+
+        return $counter;
+    }
+
+    protected function getCounters()
+    {
+        return $this->getStringCounter($this->migrationCounter).$this->getStringCounter($this->fileCounter++);
+    }
+
+    public function getMigrationCounter()
+    {
+        return $this->migrationCounter;
+    }
+
+    public function getFileCounter()
+    {
+        return $this->fileCounter;
     }
 
     protected function getNodesFromMeta(Meta $meta)
@@ -90,6 +134,11 @@ class MigrationManager
         }
 
         return $nodes;
+    }
+
+    public function isLoadingMigrations()
+    {
+        return $this->loadingMigrations;
     }
 
     protected function loadWantedNode()
@@ -186,17 +235,6 @@ class MigrationManager
         ], $data))->render());
     }
 
-    protected function getCounter()
-    {
-        $counter = (string) $this->counter++;
-
-        for ($i = (6 - strlen($counter)); $i > 0; $i--) {
-            $counter = '0'.$counter;
-        }
-
-        return $counter;
-    }
-
     protected function generateMigration(MetaNode $metaNode)
     {
         $meta = $metaNode->getMeta();
@@ -209,10 +247,10 @@ class MigrationManager
             'table' => $table = $meta->getTableName(),
             'up' => $metaNode->getUp(),
             'down' => $metaNode->getDown(),
-            'name' => $name = ucfirst($type).ucfirst($table).'Table',
+            'name' => $name = ucfirst($type).ucfirst(Str::camel($table)).'Table',
         ];
 
-        $fileName = date('Y_m_d_').$this->getCounter().'_'.Str::snake($name);
+        $fileName = date('Y_m_d_').$this->getCounters().'_'.Str::snake($name);
 
         $this->generateMigrationFile('laramore::migration', $data, $this->path.DIRECTORY_SEPARATOR.$fileName.'.php');
 
