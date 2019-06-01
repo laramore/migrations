@@ -34,7 +34,7 @@ class Index extends Contraint
      * @param  array  $columns
      * @return string
      */
-    protected function getIndexName()
+    public function getIndexName()
     {
         return str_replace(['-', '.'], '_', strtolower($this->getTableName().'_'.implode('_', $this->getAttname()[0]).'_'.$this->contraint));
     }
