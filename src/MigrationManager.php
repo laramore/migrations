@@ -11,16 +11,16 @@
 namespace Laramore;
 
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Database\Migrations\Migrator;
 use Laramore\Facades\{
     MetaManager, TypeManager
 };
 use Laramore\Fields\Foreign;
 use Laramore\Interfaces\IsAPrimaryField;
 use Laramore\Migrations\{
-    Command, Contraint, DatabaseNode, MetaNode, Node, Index
+    Command, Contraint, DatabaseNode, MetaNode, Node, Index, SchemaNode,
 };
 use Illuminate\Support\Str;
-use DB;
 
 class MigrationManager
 {
@@ -159,17 +159,21 @@ class MigrationManager
 
     protected function loadActualNode()
     {
-        $doctrine = DB::connection()->getDoctrineSchemaManager();
-        $unvalidTable = config('database.migrations');
-        $actualNode = [];
+        $this->loadingMigrations = true;
 
-        foreach ($doctrine->listTables() as $table) {
-            if ($table->getName() !== $unvalidTable) {
-                $actualNode[] = new DatabaseNode($table);
+        $this->migrator->requireFiles($this->migrationFiles);
+
+        foreach ($this->migrationFiles as $migrationFile) {
+            $migration = $this->migrator->resolve($this->migrator->getMigrationName($migrationFile));
+
+            if (method_exists($migration, 'up')) {
+                $migration->up();
             }
         }
 
-        $this->actualNode = new Node($actualNode);
+        $this->loadingMigrations = false;
+
+        $this->actualNode = new SchemaNode();
         $this->actualNode->organize()->optimize();
     }
 

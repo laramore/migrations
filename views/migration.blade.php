@@ -6,7 +6,7 @@
  * @model {{ $model }}
  */
 
-use Illuminate\Support\Facades\Schema;
+use Laramore\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
