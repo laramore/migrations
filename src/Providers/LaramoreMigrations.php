@@ -19,7 +19,7 @@ class LaramoreMigrations extends ServiceProvider
 {
     public function register()
     {
-        $this->app->booting($this->bootingCallback());
+        $this->app->booting([$this, 'bootingCallback']);
     }
 
     /**
@@ -41,14 +41,12 @@ class LaramoreMigrations extends ServiceProvider
         });
     }
 
-    protected function bootingCallback()
+    public function bootingCallback()
     {
-        return function () {
-            TypeManager::addValueName('migration');
+        TypeManager::addValueName('migration');
 
-            if (TypeManager::hasType('increment')) {
-                TypeManager::increment()->migration = 'increments';
-            }
-        };
+        if (TypeManager::hasType('increment')) {
+            TypeManager::increment()->migration = 'increments';
+        }
     }
 }
