@@ -276,17 +276,21 @@ class Node extends AbstractNode
     {
         foreach ($nodes as $key => $node) {
             if ($node instanceof Command && $node->getField() === $command->getField()) {
-                $oldProperties = $this->arrayRecursiveDiff($node->getProperties(), $command->getProperties());
-                $newProperties = $this->arrayRecursiveDiff($command->getProperties(), $node->getProperties());
+                $nodeProperties = $node->getProperties();
+                $commandProperties = $command->getProperties();
+                $commandType = $command->getType();
+
+                $oldProperties = $this->arrayRecursiveDiff($nodeProperties, $commandProperties);
+                $newProperties = $this->arrayRecursiveDiff($commandProperties, $nodeProperties);
 
                 unset($nodes[$key]);
 
                 if ($count = (count($newProperties) + count($oldProperties))) {
-                    if ($count === 2 && count(array_diff([$node->getType(), $command->getType()], ['datetime', 'timestamp'])) === 0) {
+                    if ($count === 2 && count(array_diff([$node->getType(), $commandType], ['datetime', 'timestamp'])) === 0) {
                         return null;
                     }
 
-                    return new ChangeCommand($command->getTableName(), $command->getType(), $command->getAttname(), $newProperties, $oldProperties);
+                    return new ChangeCommand($command->getTableName(), $commandType, $command->getAttname(), $newProperties, $oldProperties);
                 } else {
                     return null;
                 }

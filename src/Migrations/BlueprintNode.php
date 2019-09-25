@@ -44,7 +44,7 @@ class BlueprintNode extends MetaNode
     protected function cleanUnrelevantAttributes(Fluent $column)
     {
         foreach ($column->getAttributes() as $key => $value) {
-            if (is_null($value) || $value === false) {
+            if (is_null($value) || ($value === false && $key !== 'default')) {
                 unset($column->$key);
             }
         }
