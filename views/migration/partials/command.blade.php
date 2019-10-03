@@ -1,1 +1,1 @@
-{{ $blueprintVar }}@foreach ($command->getProperties() as $method => $args)->{{ $method }}({!! implode(', ', array_map(function ($arg) { return json_encode($arg); }, (array) $args)) !!})@endforeach;
+{{ $blueprintVar }}@foreach ($command->getProperties() as $method => $args)->{{ $method }}({!! ($args === true && $method !== 'default') ? '' : implode(', ', array_map(function ($arg) { return json_encode($arg); }, (array) $args)) !!})@endforeach;
