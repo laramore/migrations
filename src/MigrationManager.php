@@ -88,7 +88,7 @@ class MigrationManager
         foreach ($meta->getFields() as $field) {
             $nodes[] = new Command($tableName, $field->getType()->migration, $field->getAttname(), $field->getProperties());
 
-            if ($field instanceof IsAPrimaryField && $field->getType() !== TypeManager::getType('increment')) {
+            if ($field instanceof IsAPrimaryField && $field->getType() !== TypeManager::increment()) {
                 end($nodes)->setProperty('primary', true);
             }
         }
@@ -145,7 +145,7 @@ class MigrationManager
     {
         $wantedNode = [];
 
-        foreach (MetaManager::getMetas() as $meta) {
+        foreach (MetaManager::all() as $meta) {
             $nodes = $this->getNodesFromMeta($meta);
 
             if (count($nodes)) {

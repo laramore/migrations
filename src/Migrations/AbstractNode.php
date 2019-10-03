@@ -188,7 +188,7 @@ abstract class AbstractNode
                         $passedTables[] = $commonTable;
                     }
 
-                    $packNode = new MetaNode($subNodes, MetaManager::getMetaForTableName($commonTable), $metaType);
+                    $packNode = new MetaNode($subNodes, MetaManager::getForTableName($commonTable), $metaType);
 
                     // Do not handle the just created node.
                     $i -= (count($subNodes) - 1);
@@ -212,7 +212,7 @@ abstract class AbstractNode
                 $metaType = 'create';
             }
 
-            $packNode = new MetaNode($subNodes, MetaManager::getMetaForTableName($commonTable), $metaType);
+            $packNode = new MetaNode($subNodes, MetaManager::getForTableName($commonTable), $metaType);
 
             $this->removeNodes($firstIndex, $nbrOfNodes);
             $this->insertNode($packNode->organize()->optimize(), $firstIndex);

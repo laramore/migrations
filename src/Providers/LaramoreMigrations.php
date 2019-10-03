@@ -43,9 +43,9 @@ class LaramoreMigrations extends ServiceProvider
 
     public function bootingCallback()
     {
-        TypeManager::addValueName('migration');
+        TypeManager::define('migration');
 
-        if (TypeManager::hasType('increment')) {
+        if (TypeManager::has('increment')) {
             TypeManager::increment()->migration = 'increments';
         }
     }

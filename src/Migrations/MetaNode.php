@@ -111,7 +111,7 @@ class MetaNode extends AbstractNode
 
     public function getMeta(): Meta
     {
-        return MetaManager::getMetaForTableName($this->getTableName());
+        return MetaManager::getForTableName($this->getTableName());
     }
 
     public function getTableName(): string
