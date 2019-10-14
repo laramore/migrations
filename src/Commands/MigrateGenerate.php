@@ -87,7 +87,7 @@ class MigrateGenerate extends Command
 
         if (count($generatedFiles)) {
             foreach ($generatedFiles as $generatedFile) {
-                $this->line("<info>Generated Migration:</info> {$generatedFile}");
+                $this->line("<info>Generated:</info> {$generatedFile}");
             }
         } else {
             $this->warn('No new migrations to generate');

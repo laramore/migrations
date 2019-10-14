@@ -149,7 +149,7 @@ class MigrationManager
             $nodes = $this->getNodesFromMeta($meta);
 
             if (count($nodes)) {
-                $wantedNode[] = new MetaNode($nodes, $meta);
+                $wantedNode[] = new MetaNode($nodes, $meta->getTableName());
             }
         }
 
@@ -241,20 +241,23 @@ class MigrationManager
 
     protected function generateMigration(MetaNode $metaNode)
     {
-        $meta = $metaNode->getMeta();
         $type = $metaNode->getType();
+        $counters = $this->getCounters();
 
         $data = [
             'date' => now(),
-            'model' => $meta->getModelClass(),
             'type' => $type,
-            'table' => $table = $meta->getTableName(),
+            'table' => $table = $metaNode->getTableName(),
             'up' => $metaNode->getUp(),
             'down' => $metaNode->getDown(),
-            'name' => $name = ucfirst($type).ucfirst(Str::camel($table)).'Table',
+            'name' => ($name = ucfirst($type).ucfirst(Str::camel($table)).'Table').$counters,
         ];
 
-        $fileName = date('Y_m_d_').$this->getCounters().'_'.Str::snake($name);
+        if ($type !== 'delete') {
+            $data['model'] = $metaNode->getMeta()->getModelClass();
+        }
+
+        $fileName = date('Y_m_d_Hms').'_'.Str::snake($name).'_'.$counters;
 
         $this->generateMigrationFile('laramore::migration', $data, $this->path.DIRECTORY_SEPARATOR.$fileName.'.php');
 
