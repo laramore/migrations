@@ -354,12 +354,16 @@ class Node extends AbstractNode
             }
 
             if ($resultedNode) {
-                if (is_array($resultedNode)) {
-                    $diffNodes = array_merge($diffNodes, $resultedNode);
+                if (\is_array($resultedNode)) {
+                    $diffNodes = \array_merge($diffNodes, $resultedNode);
                 } else {
                     $diffNodes[] = $resultedNode;
                 }
             }
+        }
+
+        foreach ($substractNodes as $nodeToSubstract) {
+            $diffNodes[] = $nodeToSubstract;
         }
 
         return (new static($diffNodes));

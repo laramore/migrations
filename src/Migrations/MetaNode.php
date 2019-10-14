@@ -24,10 +24,10 @@ class MetaNode extends AbstractNode
     protected $organized = false;
     protected $optimized = false;
 
-    public function __construct(array $nodes=[], Meta $meta, string $type='create')
+    public function __construct(array $nodes=[], string $tableName, string $type='create')
     {
         $this->type = $type;
-        $this->tableNames = [$meta->getTableName()];
+        $this->tableNames = [$tableName];
 
         $this->setNodes($nodes);
     }
@@ -151,25 +151,27 @@ class MetaNode extends AbstractNode
 
     protected function optimizing()
     {
-        $fields = $this->getMeta()->getFields();
-        $nbrOfNodes = count($this->getNodes());
-        $unorderedNodes = $this->nodes;
-        $this->nodes = [];
+        if ($this->type !== 'delete') {
+            $fields = $this->getMeta()->getFields();
+            $nbrOfNodes = count($this->getNodes());
+            $unorderedNodes = $this->nodes;
+            $this->nodes = [];
 
-        foreach ($fields as $field) {
-            $attname = $field->getAttname();
+            foreach ($fields as $field) {
+                $attname = $field->getAttname();
 
-            foreach ($unorderedNodes as $node) {
-                if ($node->getAttname() === $attname) {
-                    $this->nodes[] = $node;
+                foreach ($unorderedNodes as $node) {
+                    if ($node->getAttname() === $attname) {
+                        $this->nodes[] = $node;
 
-                    break;
+                        break;
+                    }
                 }
             }
-        }
 
-        if (count($unorderedNodes) !== count($this->nodes)) {
-            throw new \Exception('Some commands are not meant to be created by this meta');
+            if (count($unorderedNodes) !== count($this->nodes)) {
+                throw new \Exception('Some commands are not meant to be created by this meta');
+            }
         }
     }
 
@@ -211,13 +213,13 @@ class MetaNode extends AbstractNode
                 ];
 
             case 'delete':
-                foreach (MigrationManager::getWantedNode()->getNodes() as $metaNode) {
+                foreach (MigrationManager::getActualNode()->getNodes() as $metaNode) {
                     if ($metaNode->getTableName() === $this->getTableName()) {
                         return [
                             'type' => 'delete',
-                            'fields' => $metaNode->getFieldReverseNodes(),
-                            'contraints' => $metaNode->getContraintReverseCommands(),
-                            'indexes' => $metaNode->getIndexReverseCommands(),
+                            'fields' => $this->getFieldNodes(),
+                            'contraints' => $this->getContraintCommands(),
+                            'indexes' => $this->getIndexCommands(),
                         ];
                     }
                 }

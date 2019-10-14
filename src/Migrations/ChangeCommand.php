@@ -37,6 +37,6 @@ class ChangeCommand extends Command
 
     public function getReverse()
     {
-        return new ChangeCommand($this->getTableName(), $this->getType(), $this->getAttname(), $this->properties, $this->oldProperties);
+        return new ChangeCommand($this->getTableName(), $this->getType(), $this->getAttname(), $this->oldProperties, $this->properties);
     }
 }

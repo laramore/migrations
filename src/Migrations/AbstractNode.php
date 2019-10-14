@@ -28,7 +28,7 @@ abstract class AbstractNode
 
     protected function loadTableNames($nodes)
     {
-        if ($nodes instanceof Command || $nodes instanceof Contraint) {
+        if ($nodes instanceof AbstractCommand) {
             return [$nodes->getTableName()];
         } else if ($nodes instanceof AbstractNode) {
             return $nodes->getTableNames();
@@ -181,14 +181,16 @@ abstract class AbstractNode
                     $lastIndex = $i;
                     $subNodes = array_slice($this->nodes, $firstIndex, ($lastIndex - $firstIndex));
 
-                    if (in_array($commonTable, $passedTables)) {
+                    if (!MetaManager::hasForTableName($commonTable)) {
+                        $metaType = 'delete';
+                    } else if (in_array($commonTable, $passedTables)) {
                         $metaType = 'update';
                     } else {
                         $metaType = 'create';
                         $passedTables[] = $commonTable;
                     }
 
-                    $packNode = new MetaNode($subNodes, MetaManager::getForTableName($commonTable), $metaType);
+                    $packNode = new MetaNode($subNodes, $commonTable, $metaType);
 
                     // Do not handle the just created node.
                     $i -= (count($subNodes) - 1);
@@ -206,13 +208,15 @@ abstract class AbstractNode
         if (!is_null($firstIndex)) {
             $subNodes = array_slice($this->nodes, $firstIndex, ($nbrOfNodes - $firstIndex));
 
-            if (in_array($commonTable, $passedTables)) {
+            if (!MetaManager::hasForTableName($commonTable)) {
+                $metaType = 'delete';
+            } else if (in_array($commonTable, $passedTables)) {
                 $metaType = 'update';
             } else {
                 $metaType = 'create';
             }
 
-            $packNode = new MetaNode($subNodes, MetaManager::getForTableName($commonTable), $metaType);
+            $packNode = new MetaNode($subNodes, $commonTable, $metaType);
 
             $this->removeNodes($firstIndex, $nbrOfNodes);
             $this->insertNode($packNode->organize()->optimize(), $firstIndex);

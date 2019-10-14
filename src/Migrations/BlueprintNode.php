@@ -26,8 +26,11 @@ class BlueprintNode extends MetaNode
         $nodes = array_merge($blueprint->getColumns(), $commands = array_filter($blueprint->getCommands(), function (Fluent $command) {
             return $command->name !== 'create';
         }));
-        $meta = MetaManager::getForTableName($blueprint->getTable());
-        parent::__construct($nodes, $meta, count($commands) === count($blueprint->getCommands()) ? 'update' : 'create');
+
+        $this->type = (count($commands) === count($blueprint->getCommands()) ? 'update' : 'create');
+        $this->tableNames = [$blueprint->getTable()];
+
+        $this->setNodes($nodes);
     }
 
     protected function setNodes(array $nodes)
@@ -39,6 +42,13 @@ class BlueprintNode extends MetaNode
                 return $this->commandToContraint($node);
             }
         }, $nodes);
+    }
+
+    protected function optimizing()
+    {
+        if (MetaManager::hasForTableName($this->getTableName())) {
+            parent::optimizing();
+        }
     }
 
     protected function cleanUnrelevantAttributes(Fluent $column)
