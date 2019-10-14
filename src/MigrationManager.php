@@ -28,8 +28,9 @@ class MigrationManager
     protected $migrator;
     protected $loadingMigrations = false;
 
-    protected $migrationCounter;
     protected $fileCounter = 0;
+    protected $migrationCounter = 0;
+    protected $currentFileCounter = 0;
 
     protected $actualNode;
     protected $wantedNode;
@@ -47,10 +48,8 @@ class MigrationManager
 
     protected function calculateMigrationCounter()
     {
-        if (count($this->migrationFiles)) {
+        if ($this->fileCounter = count($this->migrationFiles)) {
             $this->migrationCounter = (((integer) substr(explode('_', end($this->migrationFiles))[3], 0, 3)) + 1);
-        } else {
-            $this->migrationCounter = 0;
         }
     }
 
@@ -63,21 +62,6 @@ class MigrationManager
         }
 
         return $counter;
-    }
-
-    protected function getCounters()
-    {
-        return $this->getStringCounter($this->migrationCounter).$this->getStringCounter($this->fileCounter++);
-    }
-
-    public function getMigrationCounter()
-    {
-        return $this->migrationCounter;
-    }
-
-    public function getFileCounter()
-    {
-        return $this->fileCounter;
     }
 
     protected function getNodesFromMeta(Meta $meta)
@@ -242,7 +226,8 @@ class MigrationManager
     protected function generateMigration(MetaNode $metaNode)
     {
         $type = $metaNode->getType();
-        $counters = $this->getCounters();
+        $counters = $this->getStringCounter($this->migrationCounter).$this->getStringCounter($this->currentFileCounter++);
+        $fileCounter = $this->getStringCounter($this->fileCounter++);
 
         $data = [
             'date' => now(),
@@ -250,14 +235,14 @@ class MigrationManager
             'table' => $table = $metaNode->getTableName(),
             'up' => $metaNode->getUp(),
             'down' => $metaNode->getDown(),
-            'name' => ($name = ucfirst($type).ucfirst(Str::camel($table)).'Table').$counters,
+            'name' => ($name = ucfirst($type).ucfirst(Str::camel($table)).'Table').$fileCounter,
         ];
 
         if ($type !== 'delete') {
             $data['model'] = $metaNode->getMeta()->getModelClass();
         }
 
-        $fileName = date('Y_m_d_Hms').'_'.Str::snake($name).'_'.$counters;
+        $fileName = date('Y_m_d_').$counters.'_'.Str::snake($name).'_'.$fileCounter;
 
         $this->generateMigrationFile('laramore::migration', $data, $this->path.DIRECTORY_SEPARATOR.$fileName.'.php');
 
