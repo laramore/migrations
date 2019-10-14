@@ -52,6 +52,21 @@ class Command extends AbstractCommand
         ], $this->properties);
     }
 
+    public function getMigrationProperties()
+    {
+        $properties = \array_map(function ($value) {
+            return [$value];
+        }, $this->getProperties());
+
+        if (\in_array($this->type, ['enum', 'set']) && isset($properties['allowed'])) {
+            $properties[$this->type][] = $properties['allowed'];
+
+            unset($properties['allowed']);
+        }
+
+        return $properties;
+    }
+
     public function setProperty(string $key, $value)
     {
         $this->properties[$key] = $value;

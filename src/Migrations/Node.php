@@ -256,6 +256,7 @@ class Node extends AbstractNode
             if (array_key_exists($mKey, $aArray2)) {
                 if (is_array($mValue)) {
                     $aRecursiveDiff = $this->arrayRecursiveDiff($mValue, $aArray2[$mKey]);
+
                     if (count($aRecursiveDiff)) {
                         $aReturn[$mKey] = $aRecursiveDiff;
                     }
@@ -288,6 +289,11 @@ class Node extends AbstractNode
                 if ($count = (count($newProperties) + count($oldProperties))) {
                     if ($count === 2 && count(array_diff([$node->getType(), $commandType], ['datetime', 'timestamp'])) === 0) {
                         return null;
+                    }
+
+                    if (\in_array($commandType, ['enum', 'set'])) {
+                        $oldProperties['allowed'] = $nodeProperties['allowed'];
+                        $newProperties['allowed'] = $commandProperties['allowed'];
                     }
 
                     return new ChangeCommand($command->getTableName(), $commandType, $command->getAttname(), $newProperties, $oldProperties);
