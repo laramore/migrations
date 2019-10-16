@@ -34,7 +34,14 @@ class MetaNode extends AbstractNode
 
     protected function setNodes(array $nodes)
     {
-        $nodes = array_map(function ($node) {
+        $this->nodes = [];
+
+        $this->addNodes($nodes);
+    }
+
+    public function addNodes(array $nodes)
+    {
+        $nodes = \array_map(function ($node) {
             if ($node instanceof AbstractNode) {
                 throw new \Exception('A MetaNode only contains commands and contraints');
             } else if ($node->getTableName() !== $this->getTableName()) {
@@ -42,12 +49,12 @@ class MetaNode extends AbstractNode
             }
 
             return $node;
-        }, array_values($nodes));
+        }, \array_values($nodes));
 
         $this->organized = false;
         $this->optimized = false;
 
-        $this->nodes = $nodes;
+        $this->nodes = \array_merge($this->nodes, $nodes);
     }
 
     public function getNodes(): array
