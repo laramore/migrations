@@ -85,7 +85,7 @@ class MigrateGenerate extends Command
 
         $generatedFiles = MigrationManager::generateMigrations();
 
-        if (count($generatedFiles)) {
+        if (\count($generatedFiles)) {
             foreach ($generatedFiles as $generatedFile) {
                 $this->line("<info>Generated:</info> {$generatedFile}");
             }

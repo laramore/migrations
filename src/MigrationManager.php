@@ -251,7 +251,15 @@ class MigrationManager
 
     public function clearMigrations()
     {
-        (new Filesystem)->cleanDirectory($this->path);
+        $fs = new Filesystem;
+        $regex = "#$this->path/?(.*)\.php#";
+
+        return \array_map(function ($filePath) use ($fs, $regex) {
+            $fs->delete($filePath);
+            \preg_match($regex, $filePath, $matches);
+
+            return $matches[1];
+        }, $this->migrationFiles);
     }
 
     public function generateMigrations()
