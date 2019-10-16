@@ -39,7 +39,7 @@ class BlueprintNode extends MetaNode
             if ($node instanceof ColumnDefinition) {
                 return $this->columnToCommand($node);
             } else if ($node instanceof Fluent) {
-                return $this->commandToContraint($node);
+                return $this->commandToConstraint($node);
             }
         }, $nodes);
     }
@@ -118,7 +118,7 @@ class BlueprintNode extends MetaNode
         return new Command($this->getTableName(), $type, $attname, $column->getAttributes());
     }
 
-    public function commandToContraint(Fluent $command)
+    public function commandToConstraint(Fluent $command)
     {
         $this->cleanUnrelevantAttributes($command);
 
@@ -129,15 +129,15 @@ class BlueprintNode extends MetaNode
             $needs = $this->getNeedsForCommand($command);
             $column = $this->popFromColumn($command, 'columns')[0];
 
-            $contraint = new Contraint($this->getTableName(), $column, $needs, $command->getAttributes());
+            $constraint = new Constraint($this->getTableName(), $column, $needs, $command->getAttributes());
         } else {
-            $contraint = new Index($this->getTableName(), $type, $command->columns);
+            $constraint = new Index($this->getTableName(), $type, $command->columns);
         }
 
-        if ($contraint->getIndexName() !== $index) {
-            $contraint->getCommand()->setProperty('index', $index);
+        if ($constraint->getIndexName() !== $index) {
+            $constraint->getCommand()->setProperty('index', $index);
         }
 
-        return $contraint;
+        return $constraint;
     }
 }

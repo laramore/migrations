@@ -1,6 +1,6 @@
 <?php
 /**
- * Correspond to a migration contraint.
+ * Correspond to a migration constraint.
  *
  * @author Samy Nastuzzi <samy@nastuzzi.fr>
  *
@@ -12,18 +12,18 @@ namespace Laramore\Migrations;
 
 use Laramore\Meta;
 
-class Contraint extends AbstractCommand
+class Constraint extends AbstractCommand
 {
     protected $tableName;
     protected $needs;
     protected $command;
-    protected $contraint = 'foreign';
+    protected $constraint = 'foreign';
 
     public function __construct(string $tableName, $attname, array $needs, array $properties)
     {
         $this->tableName = $tableName;
         $this->needs = $needs;
-        $this->command = new Command($tableName, $this->contraint, $attname, $properties);
+        $this->command = new Command($tableName, $this->constraint, $attname, $properties);
     }
 
     public function getNodes()
@@ -76,11 +76,11 @@ class Contraint extends AbstractCommand
      */
     public function getIndexName()
     {
-        return str_replace(['-', '.'], '_', strtolower($this->getTableName().'_'.$this->getAttname().'_'.$this->contraint));
+        return str_replace(['-', '.'], '_', strtolower($this->getTableName().'_'.$this->getAttname().'_'.$this->constraint));
     }
 
     protected function generateReverse(): AbstractCommand
     {
-        return new DropCommand($this->getTableName(), 'drop'.ucfirst($this->contraint), $this->getAttname(), $this->getIndexName(), $this->getCommand());
+        return new DropCommand($this->getTableName(), 'drop'.ucfirst($this->constraint), $this->getAttname(), $this->getIndexName(), $this->getCommand());
     }
 }

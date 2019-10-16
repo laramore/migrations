@@ -12,11 +12,11 @@ namespace Laramore\Migrations;
 
 use Laramore\Meta;
 
-class Index extends Contraint
+class Index extends Constraint
 {
     public function __construct(string $tableName, string $type, array $fields)
     {
-        $this->contraint = $type;
+        $this->constraint = $type;
         $needs = array_map(function ($field) use ($tableName) {
             return [
                 'table' => $tableName,
@@ -36,11 +36,11 @@ class Index extends Contraint
      */
     public function getIndexName()
     {
-        return str_replace(['-', '.'], '_', strtolower($this->getTableName().'_'.implode('_', $this->getAttname()[0]).'_'.$this->contraint));
+        return str_replace(['-', '.'], '_', strtolower($this->getTableName().'_'.implode('_', $this->getAttname()[0]).'_'.$this->constraint));
     }
 
     public function getField()
     {
-        return $this->tableName.'.'.implode('_', $this->getCommand()->getAttname()[0]).'_'.$this->contraint.'+';
+        return $this->tableName.'.'.implode('_', $this->getCommand()->getAttname()[0]).'_'.$this->constraint.'+';
     }
 }

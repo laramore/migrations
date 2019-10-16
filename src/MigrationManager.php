@@ -18,7 +18,7 @@ use Laramore\Facades\{
 use Laramore\Fields\Foreign;
 use Laramore\Interfaces\IsAPrimaryField;
 use Laramore\Migrations\{
-    Command, Contraint, DatabaseNode, MetaNode, Node, Index, SchemaNode,
+    Command, Constraint, DatabaseNode, MetaNode, Node, Index, SchemaNode,
 };
 use Illuminate\Support\Str;
 
@@ -95,7 +95,7 @@ class MigrationManager
                     'on' => $toTableName
                 ];
 
-                $nodes[] = new Contraint($tableName, $attname, $needs, $properties);
+                $nodes[] = new Constraint($tableName, $attname, $needs, $properties);
             }
         }
 

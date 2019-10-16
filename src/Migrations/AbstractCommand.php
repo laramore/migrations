@@ -1,6 +1,6 @@
 <?php
 /**
- * Abstract command for Command and Contraint.
+ * Abstract command for Command and Constraint.
  *
  * @author Samy Nastuzzi <samy@nastuzzi.fr>
  *

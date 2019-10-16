@@ -2,13 +2,13 @@ Schema::{{ $type === 'create' ? $type : 'table' }}({!! json_encode($table) !!}, 
 @if (count($fields))
             @include('laramore::migration.partials.commands', ['commands' => $fields])
 @endif
-@if (count($fields) && count($contraints))
+@if (count($fields) && count($constraints))
 
 @endif
-@if (count($contraints))
-	        @include('laramore::migration.partials.commands', ['commands' => $contraints])
+@if (count($constraints))
+	        @include('laramore::migration.partials.commands', ['commands' => $constraints])
 @endif
-@if ((count($fields) + count($contraints)) && count($indexes))
+@if ((count($fields) + count($constraints)) && count($indexes))
 
 @endif
 @if (count($indexes))

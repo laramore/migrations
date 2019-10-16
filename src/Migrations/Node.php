@@ -12,7 +12,7 @@ namespace Laramore\Migrations;
 
 class Node extends AbstractNode
 {
-    protected function contraintCanMove(Contraint $node, int $firstIndex, int $lastIndex)
+    protected function constraintCanMove(Constraint $node, int $firstIndex, int $lastIndex)
     {
         for ($i = $firstIndex; $i < $lastIndex; $i++) {
             $nodeToCheck = $this->getNodes()[$i];
@@ -25,18 +25,18 @@ class Node extends AbstractNode
         return true;
     }
 
-    protected function getContraintTables(Contraint $contraint)
+    protected function getConstraintTables(Constraint $constraint)
     {
         return \array_unique(\array_map(function (array $need) {
             return $need['table'];
-        }, $contraint->getNeeds()));
+        }, $constraint->getNeeds()));
     }
 
-    protected function getMetaContraintTables(MetaNode $node)
+    protected function getMetaConstraintTables(MetaNode $node)
     {
-        return \array_unique(\array_merge([], ...\array_map(function (Contraint $contraint) {
-            return $this->getContraintTables($contraint);
-        }, $node->getContraintNodes())));
+        return \array_unique(\array_merge([], ...\array_map(function (Constraint $constraint) {
+            return $this->getConstraintTables($constraint);
+        }, $node->getConstraintNodes())));
     }
 
     protected function swapNodes(int $firstIndex, int $secondIndex)
@@ -84,14 +84,14 @@ class Node extends AbstractNode
             $jToAvoid[$i] = $jToAvoid[$i] ?? null;
 
             $node1 = $this->getNodes()[$i];
-            $tableNames1 = $this->getMetaContraintTables($node1);
+            $tableNames1 = $this->getMetaConstraintTables($node1);
 
             // If the meta node has no constraints, just move it on the top, as it depends on nothing.
             if (\count($tableNames1)) {
                 // For each meta nodes after ours, check if they have less constraints, if it is the case, swap them.
                 for ($j = ($i + 1); $j < $nbrOfNodes; $j++) {
                     $node2 = $this->getNodes()[$j];
-                    $tableNames2 = $this->getMetaContraintTables($node2);
+                    $tableNames2 = $this->getMetaConstraintTables($node2);
 
                     if ($jToAvoid[$i] === $j) {
                         $jToAvoid = null;
@@ -124,7 +124,7 @@ class Node extends AbstractNode
         for ($i = 0; $i < $nbrOfNodes; $i++) {
             $nodeToMove = $this->getNodes()[$i];
 
-            if ($nodeToMove instanceof Contraint) {
+            if ($nodeToMove instanceof Constraint) {
                 $neededFields = $nodeToMove->getFields();
                 $missingFields = $this->arrayRecursiveDiff($neededFields, $fields);
 
@@ -189,7 +189,7 @@ class Node extends AbstractNode
             $node = $this->getNodes()[$i];
             $movedNodes = [];
 
-            if ($node instanceof Contraint) {
+            if ($node instanceof Constraint) {
                 $movingTable = $node->getTableName();
 
                 for ($j = 0; $j <= $i; $j++) {
@@ -205,7 +205,7 @@ class Node extends AbstractNode
                             for ($k = ($j + 1); $k <= $i; $k++) {
                                 $nodeToCheck = $this->getNodes()[$k];
 
-                                if ($nodeToCheck instanceof Contraint) {
+                                if ($nodeToCheck instanceof Constraint) {
                                     if (in_array($nodeToMove->getField(), $nodeToCheck->getFields())) {
                                         $this->moveNode($j, ($k - 1));
                                         $moved = true;
@@ -216,7 +216,7 @@ class Node extends AbstractNode
                             }
 
                             if (!$moved && $nodeToMove === $this->getNodes()[$j]) {
-                                // Move after the contraint as it is not applied to this node.
+                                // Move after the constraint as it is not applied to this node.
                                 $this->moveNode($j, $i);
                                 $j--;
                             }
@@ -249,7 +249,7 @@ class Node extends AbstractNode
                             $j++;
                         }
                     } else {
-                        if ($this->contraintCanMove($nodeToMove, $i, $j)) {
+                        if ($this->constraintCanMove($nodeToMove, $i, $j)) {
                             $this->moveNode($j, $i);
                             $movedNodes[] = $nodeToMove;
                             $j++;
@@ -263,7 +263,7 @@ class Node extends AbstractNode
             $node = $this->getNodes()[$i];
             $movedNodes = [];
 
-            if ($node instanceof Contraint) {
+            if ($node instanceof Constraint) {
                 $movingTable = $node->getTableName();
 
                 for ($j = 0; $j <= $i; $j++) {
@@ -273,7 +273,7 @@ class Node extends AbstractNode
                         continue;
                     }
 
-                    if ($nodeToMove instanceof Contraint) {
+                    if ($nodeToMove instanceof Constraint) {
                         if ($nodeToMove->getTableName() === $movingTable) {
                             $this->moveNode($j, $i);
                             $movedNodes[] = $nodeToMove;
@@ -345,15 +345,15 @@ class Node extends AbstractNode
         return $command;
     }
 
-    protected function getResultedContraint(array &$nodes, Contraint $contraint)
+    protected function getResultedConstraint(array &$nodes, Constraint $constraint)
     {
-        $command = $contraint->getCommand();
+        $command = $constraint->getCommand();
 
         foreach ($nodes as $key => $node) {
-            if ($node instanceof Contraint) {
+            if ($node instanceof Constraint) {
                 $nodeCommand = $node->getCommand();
 
-                if ($node->getField() === $contraint->getField()) {
+                if ($node->getField() === $constraint->getField()) {
                     $oldProperties = $this->arrayRecursiveDiff($nodeCommand->getProperties(), $command->getProperties());
                     $newProperties = $this->arrayRecursiveDiff($command->getProperties(), $nodeCommand->getProperties());
 
@@ -362,12 +362,12 @@ class Node extends AbstractNode
                     if ((\count($newProperties) + \count($oldProperties))) {
                         $dropNode = $node->getReverse();
                         $reversedCommand = $dropNode->getReverse();
-                        $dropNode->setReverse($contraint->getReverse());
-                        $contraint->setReverse($reversedCommand);
+                        $dropNode->setReverse($constraint->getReverse());
+                        $constraint->setReverse($reversedCommand);
 
                         return [
                             $dropNode,
-                            $contraint,
+                            $constraint,
                         ];
                     } else {
                         return null;
@@ -376,7 +376,7 @@ class Node extends AbstractNode
             }
         }
 
-        return $contraint;
+        return $constraint;
     }
 
     public function diff(Node $node): Node
@@ -389,7 +389,7 @@ class Node extends AbstractNode
             if ($nodeToCheck instanceof Command) {
                 $resultedNode = $this->getResultedCommand($substractNodes, $nodeToCheck);
             } else {
-                $resultedNode = $this->getResultedContraint($substractNodes, $nodeToCheck);
+                $resultedNode = $this->getResultedConstraint($substractNodes, $nodeToCheck);
             }
 
             if ($resultedNode) {

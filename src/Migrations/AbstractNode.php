@@ -78,7 +78,7 @@ abstract class AbstractNode
         return array_unique($fields);
     }
 
-    public function getFieldsAndContraints(): array
+    public function getFieldsAndConstraints(): array
     {
         $fields = [];
 
@@ -86,7 +86,7 @@ abstract class AbstractNode
             if ($node instanceof AbstractCommand) {
                 $fields[] = $node->getField();
             } else {
-                $fields = array_merge($fields, $node->getFieldsAndContraints());
+                $fields = array_merge($fields, $node->getFieldsAndConstraints());
             }
         }
 

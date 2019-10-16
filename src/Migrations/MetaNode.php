@@ -19,7 +19,7 @@ class MetaNode extends AbstractNode
 {
     protected $type;
     protected $nodes = [];
-    protected $contraints = [];
+    protected $constraints = [];
     protected $indexes = [];
     protected $organized = false;
     protected $optimized = false;
@@ -43,7 +43,7 @@ class MetaNode extends AbstractNode
     {
         $nodes = \array_map(function ($node) {
             if ($node instanceof AbstractNode) {
-                throw new \Exception('A MetaNode only contains commands and contraints');
+                throw new \Exception('A MetaNode only contains commands and constraints');
             } else if ($node->getTableName() !== $this->getTableName()) {
                 throw new \Exception('All subnodes should be from the current table name');
             }
@@ -61,7 +61,7 @@ class MetaNode extends AbstractNode
     {
         return array_merge(
             $this->nodes,
-            $this->contraints,
+            $this->constraints,
             $this->indexes
         );
     }
@@ -71,9 +71,9 @@ class MetaNode extends AbstractNode
         return $this->organize()->nodes;
     }
 
-    public function getContraintNodes(): array
+    public function getConstraintNodes(): array
     {
-        return $this->organize()->contraints;
+        return $this->organize()->constraints;
     }
 
     public function getIndexNodes(): array
@@ -81,11 +81,11 @@ class MetaNode extends AbstractNode
         return $this->organize()->indexes;
     }
 
-    public function getContraintCommands(): array
+    public function getConstraintCommands(): array
     {
-        return array_map(function ($contraint) {
-            return $contraint->getCommand();
-        }, $this->getContraintNodes());
+        return array_map(function ($constraint) {
+            return $constraint->getCommand();
+        }, $this->getConstraintNodes());
     }
 
     public function getIndexCommands(): array
@@ -97,16 +97,16 @@ class MetaNode extends AbstractNode
 
     public function getFieldReverseCommands(): array
     {
-        return array_filter(array_map(function ($contraint) {
-            return $contraint->getReverse();
+        return array_filter(array_map(function ($constraint) {
+            return $constraint->getReverse();
         }, $this->getFieldNodes()));
     }
 
-    public function getContraintReverseCommands(): array
+    public function getConstraintReverseCommands(): array
     {
-        return array_filter(array_map(function ($contraint) {
-            return $contraint->getReverse();
-        }, $this->getContraintNodes()));
+        return array_filter(array_map(function ($constraint) {
+            return $constraint->getReverse();
+        }, $this->getConstraintNodes()));
     }
 
     public function getIndexReverseCommands(): array
@@ -143,11 +143,11 @@ class MetaNode extends AbstractNode
         for ($i = 0; $i < $nbrOfNodes; $i++) {
             $node = $this->getNodes()[$i];
 
-            if ($node instanceof Contraint) {
+            if ($node instanceof Constraint) {
                 if ($node instanceof Index) {
                     $this->indexes[] = $node;
                 } else {
-                    $this->contraints[] = $node;
+                    $this->constraints[] = $node;
                 }
 
                 $this->removeNode($i--);
@@ -189,7 +189,7 @@ class MetaNode extends AbstractNode
                 return [
                     'type' => 'create',
                     'fields' => $this->getFieldNodes(),
-                    'contraints' => $this->getContraintCommands(),
+                    'constraints' => $this->getConstraintCommands(),
                     'indexes' => $this->getIndexCommands(),
                 ];
 
@@ -204,7 +204,7 @@ class MetaNode extends AbstractNode
                 return [
                     'type' => 'update',
                     'fields' => $this->getFieldNodes(),
-                    'contraints' => $this->getContraintCommands(),
+                    'constraints' => $this->getConstraintCommands(),
                     'indexes' => $this->getIndexCommands(),
                 ];
         }
@@ -225,7 +225,7 @@ class MetaNode extends AbstractNode
                         return [
                             'type' => 'delete',
                             'fields' => $this->getFieldNodes(),
-                            'contraints' => $this->getContraintCommands(),
+                            'constraints' => $this->getConstraintCommands(),
                             'indexes' => $this->getIndexCommands(),
                         ];
                     }
@@ -237,7 +237,7 @@ class MetaNode extends AbstractNode
                 return [
                     'type' => 'update',
                     'fields' => $this->getFieldReverseCommands(),
-                    'contraints' => $this->getContraintReverseCommands(),
+                    'constraints' => $this->getConstraintReverseCommands(),
                     'indexes' => $this->getIndexReverseCommands(),
                 ];
         }
