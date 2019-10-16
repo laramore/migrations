@@ -17,7 +17,7 @@ class Node extends AbstractNode
         for ($i = $firstIndex; $i < $lastIndex; $i++) {
             $nodeToCheck = $this->getNodes()[$i];
 
-            if ($nodeToCheck instanceof Command && in_array($nodeToCheck->getField(), $node->getFields())) {
+            if ($nodeToCheck instanceof Command && \in_array($nodeToCheck->getField(), $node->getFields())) {
                 return false;
             }
         }
@@ -25,12 +25,17 @@ class Node extends AbstractNode
         return true;
     }
 
+    protected function getContraintTables(Contraint $contraint)
+    {
+        return \array_unique(\array_map(function (array $need) {
+            return $need['table'];
+        }, $contraint->getNeeds()));
+    }
+
     protected function getMetaContraintTables(MetaNode $node)
     {
-        return array_unique(array_merge([], ...array_map(function (Contraint $contraint) {
-            return array_map(function (array $need) {
-                return $need['table'];
-            }, $contraint->getNeeds());
+        return \array_unique(\array_merge([], ...\array_map(function (Contraint $contraint) {
+            return $this->getContraintTables($contraint);
         }, $node->getContraintNodes())));
     }
 
@@ -47,23 +52,57 @@ class Node extends AbstractNode
         }
     }
 
-    protected function orderBeforeOrganizing()
+    public function orderBeforeOrganizing()
     {
         $this->pack();
 
-        $nbrOfNodes = count($this->getNodes());
+        // Sometimes, commands and constraints are in separated meta nodes.
+        // So, we regroup all of them in the first commune meta table.
+        for ($i = 0; $i < \count($this->getNodes()); $i++) {
+            $metaNode = $this->getNodes()[$i];
+            $tableName = $metaNode->getTableName();
+
+            for ($j = ($i + 1); $j < \count($this->getNodes()); $j++) {
+                $metaNodeToCheck = $this->getNodes()[$j];
+
+                // Here we got two meta nodes for a same meta.
+                // We add all the nodes of the second in the first before deleting it.
+                if ($tableName === $metaNodeToCheck->getTableName()) {
+                    $metaNode->addNodes($metaNodeToCheck->getNodes());
+                    $metaNode->organize()->optimize();
+
+                    $this->removeNode($j--);
+                }
+            }
+        }
+
+        $nbrOfNodes = \count($this->getNodes());
+        // Avoid swap looping between 2 nodes pointing one from the other.
+        $jToAvoid = [];
 
         for ($i = 0; $i < $nbrOfNodes; $i++) {
+            $jToAvoid[$i] = $jToAvoid[$i] ?? null;
+
             $node1 = $this->getNodes()[$i];
             $tableNames1 = $this->getMetaContraintTables($node1);
 
-            if (count($tableNames1)) {
+            // If the meta node has no constraints, just move it on the top, as it depends on nothing.
+            if (\count($tableNames1)) {
+                // For each meta nodes after ours, check if they have less constraints, if it is the case, swap them.
                 for ($j = ($i + 1); $j < $nbrOfNodes; $j++) {
                     $node2 = $this->getNodes()[$j];
                     $tableNames2 = $this->getMetaContraintTables($node2);
 
-                    if (count($tableNames1) < count($tableNames2) || (count($tableNames1) === count($tableNames2) && in_array($node2->getTableName(), $tableNames1))) {
-                        $this->swapNodes($i, $j);
+                    if ($jToAvoid[$i] === $j) {
+                        $jToAvoid = null;
+                        continue;
+                    }
+
+                    if (\count($tableNames1) > \count($tableNames2) || (\count($tableNames1) === \count($tableNames2) && \in_array($node2->getTableName(), $tableNames1))) {
+                        // Avoid swap looping between 2 nodes pointing one from the other.
+                        $jToAvoid[$i] = \in_array($node1->getTableName(), $tableNames2) ? $j : null;
+
+                        $this->swapNodes($j, $i--);
                         break;
                     }
                 }
@@ -80,7 +119,7 @@ class Node extends AbstractNode
         $this->unpack();
 
         $fields = [];
-        $nbrOfNodes = count($this->getNodes());
+        $nbrOfNodes = \count($this->getNodes());
 
         for ($i = 0; $i < $nbrOfNodes; $i++) {
             $nodeToMove = $this->getNodes()[$i];
@@ -89,7 +128,7 @@ class Node extends AbstractNode
                 $neededFields = $nodeToMove->getFields();
                 $missingFields = $this->arrayRecursiveDiff($neededFields, $fields);
 
-                if ($missingFieldsCount = count($missingFields)) {
+                if ($missingFieldsCount = \count($missingFields)) {
                     for ($j = ($i + 1); $j < $nbrOfNodes; $j++) {
                         $nodeToCheck = $this->getNodes()[$j];
 
@@ -99,7 +138,7 @@ class Node extends AbstractNode
                             $missingFields = $this->arrayRecursiveDiff($missingFields, $nodeToCheck->getFields());
                         }
 
-                        if (count($missingFields) === 0) {
+                        if (\count($missingFields) === 0) {
                             if ($nodeToCheck instanceof Command) {
                                 $groupedTables = [$nodeToCheck->getTableName()];
                             } else if ($nodeToCheck instanceof AbstractNode) {
@@ -115,7 +154,7 @@ class Node extends AbstractNode
                                     $tables = $nodeNotToIsolate->getTableNames();
                                 }
 
-                                if (!count(array_intersect($groupedTables, $tables))) {
+                                if (!\count(array_intersect($groupedTables, $tables))) {
                                     break;
                                 }
 
@@ -126,7 +165,7 @@ class Node extends AbstractNode
                         }
                     }
 
-                    if ($missingFieldsCount !== count($missingFields)) {
+                    if ($missingFieldsCount !== \count($missingFields)) {
                         $this->moveNode($i--, $j);
                     }
                 }
@@ -144,7 +183,7 @@ class Node extends AbstractNode
     {
         $this->unpack();
 
-        $nbrOfNodes = count($this->getNodes());
+        $nbrOfNodes = \count($this->getNodes());
 
         for ($i = ($nbrOfNodes - 1); $i > 0; $i--) {
             $node = $this->getNodes()[$i];
@@ -257,7 +296,7 @@ class Node extends AbstractNode
                 if (is_array($mValue)) {
                     $aRecursiveDiff = $this->arrayRecursiveDiff($mValue, $aArray2[$mKey]);
 
-                    if (count($aRecursiveDiff)) {
+                    if (\count($aRecursiveDiff)) {
                         $aReturn[$mKey] = $aRecursiveDiff;
                     }
                 } else {
@@ -286,8 +325,8 @@ class Node extends AbstractNode
 
                 unset($nodes[$key]);
 
-                if ($count = (count($newProperties) + count($oldProperties))) {
-                    if ($count === 2 && count(array_diff([$node->getType(), $commandType], ['datetime', 'timestamp'])) === 0) {
+                if ($count = (\count($newProperties) + \count($oldProperties))) {
+                    if ($count === 2 && \count(array_diff([$node->getType(), $commandType], ['datetime', 'timestamp'])) === 0) {
                         return null;
                     }
 
@@ -320,7 +359,7 @@ class Node extends AbstractNode
 
                     unset($nodes[$key]);
 
-                    if ((count($newProperties) + count($oldProperties))) {
+                    if ((\count($newProperties) + \count($oldProperties))) {
                         $dropNode = $node->getReverse();
                         $reversedCommand = $dropNode->getReverse();
                         $dropNode->setReverse($contraint->getReverse());
