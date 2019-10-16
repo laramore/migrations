@@ -121,40 +121,48 @@ class Node extends AbstractNode
         $fields = [];
         $nbrOfNodes = \count($this->getNodes());
 
+        // Here we move all constraints under the required fields.
         for ($i = 0; $i < $nbrOfNodes; $i++) {
             $nodeToMove = $this->getNodes()[$i];
 
             if ($nodeToMove instanceof Constraint) {
                 $neededFields = $nodeToMove->getFields();
-                $missingFields = $this->arrayRecursiveDiff($neededFields, $fields);
+                $missingFields = \array_diff($neededFields, $fields);
 
+                // Check if fields are required before this constraint.
                 if ($missingFieldsCount = \count($missingFields)) {
                     for ($j = ($i + 1); $j < $nbrOfNodes; $j++) {
                         $nodeToCheck = $this->getNodes()[$j];
 
-                        if ($nodeToCheck instanceof Command) {
-                            $missingFields = $this->arrayRecursiveDiff($missingFields, [$nodeToCheck->getField()]);
+                        // If the node we need to check defines a new field, pop it (if it is required) in the missing list.
+                        if ($nodeToCheck instanceof AbstractCommand) {
+                            $missingFields = \array_diff($missingFields, [$nodeToCheck->getField()]);
                         } else if ($nodeToCheck instanceof AbstractNode) {
-                            $missingFields = $this->arrayRecursiveDiff($missingFields, $nodeToCheck->getFields());
+                            $missingFields = \array_diff($missingFields, $nodeToCheck->getFields());
                         }
 
+                        // When we reached the last required field, we move the constraint just after.
                         if (\count($missingFields) === 0) {
-                            if ($nodeToCheck instanceof Command) {
+                            if ($nodeToCheck instanceof AbstractCommand) {
                                 $groupedTables = [$nodeToCheck->getTableName()];
                             } else if ($nodeToCheck instanceof AbstractNode) {
                                 $groupedTables = $nodeToCheck->getTableNames();
                             }
 
-                            for ($k = $j; $k < $nbrOfNodes; $k++) {
+                            // Move all related fields in the same time.
+                            for ($k = ($j + 1); $k < $nbrOfNodes; $k++) {
                                 $nodeNotToIsolate = $this->getNodes()[$k];
 
-                                if ($nodeNotToIsolate instanceof Command) {
+                                if ($nodeNotToIsolate instanceof AbstractCommand) {
                                     $tables = [$nodeNotToIsolate->getTableName()];
                                 } else if ($nodeNotToIsolate instanceof AbstractNode) {
                                     $tables = $nodeNotToIsolate->getTableNames();
+                                } else {
+                                    break;
                                 }
 
-                                if (!\count(array_intersect($groupedTables, $tables))) {
+                                // If the node is not for the same tables, just stop searching under.
+                                if (!\count(\array_intersect($groupedTables, $tables))) {
                                     break;
                                 }
 
@@ -165,12 +173,14 @@ class Node extends AbstractNode
                         }
                     }
 
+                    // If at least one required fields was under our constraint, move our constrait after the required fields.
                     if ($missingFieldsCount !== \count($missingFields)) {
                         $this->moveNode($i--, $j);
                     }
                 }
             } else {
-                if ($nodeToMove instanceof Command) {
+                // Add all fields as passed.
+                if ($nodeToMove instanceof AbstractCommand) {
                     $fields[] = $nodeToMove->getField();
                 } else if ($nodeToMove instanceof AbstractNode) {
                     $fields = array_merge($fields, $nodeToMove->getFields());
@@ -185,6 +195,8 @@ class Node extends AbstractNode
 
         $nbrOfNodes = \count($this->getNodes());
 
+        // Move all nodes from the same table the lowest possible.
+        // This is possible by grouping them to the latest constraint if existant.
         for ($i = ($nbrOfNodes - 1); $i > 0; $i--) {
             $node = $this->getNodes()[$i];
             $movedNodes = [];
@@ -228,6 +240,7 @@ class Node extends AbstractNode
             }
         }
 
+        // Try to move on top all fields by group.
         for ($i = 0; $i < $nbrOfNodes; $i++) {
             $node = $this->getNodes()[$i];
             $movedNodes = [];
@@ -259,6 +272,7 @@ class Node extends AbstractNode
             }
         }
 
+        // Try to pack together all constraints for the same table.
         for ($i = ($nbrOfNodes - 1); $i > 0; $i--) {
             $node = $this->getNodes()[$i];
             $movedNodes = [];
@@ -287,14 +301,14 @@ class Node extends AbstractNode
         $this->pack();
     }
 
-    protected function arrayRecursiveDiff($aArray1, $aArray2)
+    protected function propertiesDiff($aArray1, $aArray2)
     {
         $aReturn = [];
 
         foreach ($aArray1 as $mKey => $mValue) {
             if (array_key_exists($mKey, $aArray2)) {
                 if (is_array($mValue)) {
-                    $aRecursiveDiff = $this->arrayRecursiveDiff($mValue, $aArray2[$mKey]);
+                    $aRecursiveDiff = $this->propertiesDiff($mValue, $aArray2[$mKey]);
 
                     if (\count($aRecursiveDiff)) {
                         $aReturn[$mKey] = $aRecursiveDiff;
@@ -320,8 +334,8 @@ class Node extends AbstractNode
                 $commandProperties = $command->getProperties();
                 $commandType = $command->getType();
 
-                $oldProperties = $this->arrayRecursiveDiff($nodeProperties, $commandProperties);
-                $newProperties = $this->arrayRecursiveDiff($commandProperties, $nodeProperties);
+                $oldProperties = $this->propertiesDiff($nodeProperties, $commandProperties);
+                $newProperties = $this->propertiesDiff($commandProperties, $nodeProperties);
 
                 unset($nodes[$key]);
 
@@ -354,8 +368,8 @@ class Node extends AbstractNode
                 $nodeCommand = $node->getCommand();
 
                 if ($node->getField() === $constraint->getField()) {
-                    $oldProperties = $this->arrayRecursiveDiff($nodeCommand->getProperties(), $command->getProperties());
-                    $newProperties = $this->arrayRecursiveDiff($command->getProperties(), $nodeCommand->getProperties());
+                    $oldProperties = $this->propertiesDiff($nodeCommand->getProperties(), $command->getProperties());
+                    $newProperties = $this->propertiesDiff($command->getProperties(), $nodeCommand->getProperties());
 
                     unset($nodes[$key]);
 
