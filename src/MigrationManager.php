@@ -24,18 +24,74 @@ use Illuminate\Support\Str;
 
 class MigrationManager
 {
+    /**
+     * Path were all migration files are stored.
+     *
+     * @var string
+     */
     protected $path;
+
+    /**
+     * Migrator instance.
+     *
+     * @var Migrator
+     */
     protected $migrator;
+
+    /**
+     * Indicate if Laramore is loading migrations.
+     *
+     * @var boolean
+     */
     protected $loadingMigrations = false;
 
+    /**
+     * Number of migration files.
+     *
+     * @var integer
+     */
     protected $fileCounter = 0;
+
+    /**
+     * Number of run migrations.
+     *
+     * @var integer
+     */
     protected $migrationCounter = 0;
+
+    /**
+     * Current generated file for this migration.
+     *
+     * @var integer
+     */
     protected $currentFileCounter = 0;
 
+    /**
+     * Actual migration node.
+     *
+     * @var SchemaNode
+     */
     protected $actualNode;
+
+    /**
+     * Wanted node generated from models.
+     *
+     * @var Node
+     */
     protected $wantedNode;
+
+    /**
+     * Missing node to get the wanted one.
+     *
+     * @var Node
+     */
     protected $missingNode;
 
+    /**
+     * Create the migration manager.
+     *
+     * @param Migrator $migrator
+     */
     public function __construct(Migrator $migrator)
     {
         $this->migrator = $migrator;
@@ -46,6 +102,11 @@ class MigrationManager
         $this->calculateMigrationCounter();
     }
 
+    /**
+     * Calculate the number of run migrations.
+     *
+     * @return void
+     */
     protected function calculateMigrationCounter()
     {
         if ($this->fileCounter = count($this->migrationFiles)) {
@@ -53,7 +114,13 @@ class MigrationManager
         }
     }
 
-    protected function getStringCounter(int $counter)
+    /**
+     * Transform an integer counter to string.
+     *
+     * @param  integer $counter
+     * @return string
+     */
+    protected function getStringCounter(int $counter): string
     {
         $counter = (string) $counter;
 
@@ -64,19 +131,27 @@ class MigrationManager
         return $counter;
     }
 
-    protected function getNodesFromMeta(Meta $meta)
+    /**
+     * Generate sub nodes/commands/constraints from a meta.
+     *
+     * @param  Meta $meta
+     * @return array
+     */
+    protected function getNodesFromMeta(Meta $meta): array
     {
         $nodes = [];
         $tableName = $meta->getTableName();
 
+        // Generate a command for each field.
         foreach ($meta->getFields() as $field) {
             $nodes[] = new Command($tableName, $field->getType()->migration, $field->getAttname(), $field->getProperties());
 
             if ($field instanceof IsAPrimaryField && $field->getType() !== TypeManager::increment()) {
-                end($nodes)->setProperty('primary', true);
+                \end($nodes)->setProperty('primary', true);
             }
         }
 
+        // Generate a constraint for each composite relations.
         foreach ($meta->getComposites() as $composite) {
             if ($composite instanceof Foreign) {
                 $needs = [
@@ -99,20 +174,20 @@ class MigrationManager
             }
         }
 
-        if (is_array($primaries = $meta->getPrimary())) {
-            $nodes[] = new Index($tableName, 'primary', array_map(function ($field) {
+        if (\is_array($primaries = $meta->getPrimary())) {
+            $nodes[] = new Index($tableName, 'primary', \array_map(function ($field) {
                 return $field->attname;
             }, $primaries));
         }
 
         foreach ($meta->getUniques() as $unique) {
-            $nodes[] = new Index($tableName, 'unique', array_map(function ($field) {
+            $nodes[] = new Index($tableName, 'unique', \array_map(function ($field) {
                 return $field->attname;
             }, $unique));
         }
 
         foreach ($meta->getIndexes() as $index) {
-            $nodes[] = new Index($tableName, 'index', array_map(function ($field) {
+            $nodes[] = new Index($tableName, 'index', \array_map(function ($field) {
                 return $field->attname;
             }, $index));
         }
@@ -120,11 +195,21 @@ class MigrationManager
         return $nodes;
     }
 
-    public function isLoadingMigrations()
+    /**
+     * Indicate if Laramore is loading migrations.
+     *
+     * @return boolean
+     */
+    public function isLoadingMigrations(): bool
     {
         return $this->loadingMigrations;
     }
 
+    /**
+     * Load all wanted nodes from models.
+     *
+     * @return void
+     */
     protected function loadWantedNode()
     {
         $wantedNode = [];
@@ -132,7 +217,7 @@ class MigrationManager
         foreach (MetaManager::all() as $meta) {
             $nodes = $this->getNodesFromMeta($meta);
 
-            if (count($nodes)) {
+            if (\count($nodes)) {
                 $wantedNode[] = new MetaNode($nodes, $meta->getTableName());
             }
         }
@@ -141,6 +226,11 @@ class MigrationManager
         $this->wantedNode->organize()->optimize();
     }
 
+    /**
+     * Load all actual nodes from migrations.
+     *
+     * @return void
+     */
     protected function loadActualNode()
     {
         $this->loadingMigrations = true;
@@ -150,7 +240,7 @@ class MigrationManager
         foreach ($this->migrationFiles as $migrationFile) {
             $migration = $this->migrator->resolve($this->migrator->getMigrationName($migrationFile));
 
-            if (method_exists($migration, 'up')) {
+            if (\method_exists($migration, 'up')) {
                 $migration->up();
             }
         }
@@ -161,13 +251,23 @@ class MigrationManager
         $this->actualNode->organize()->optimize();
     }
 
+    /**
+     * Generate the difference between the actual and wanted nodes.
+     *
+     * @return void
+     */
     protected function loadMissingNode()
     {
         $this->missingNode = $this->getWantedNode()->diff($this->getActualNode());
         $this->missingNode->organize()->optimize();
     }
 
-    public function getWantedNode()
+    /**
+     * Return the wanted node.
+     *
+     * @return Node
+     */
+    public function getWantedNode(): Node
     {
         if (is_null($this->wantedNode)) {
             $this->loadWantedNode();
@@ -176,7 +276,12 @@ class MigrationManager
         return $this->wantedNode;
     }
 
-    public function getActualNode()
+    /**
+     * Return the actual node.
+     *
+     * @return SchemaNode
+     */
+    public function getActualNode(): SchemaNode
     {
         if (is_null($this->actualNode)) {
             $this->loadActualNode();
@@ -185,6 +290,11 @@ class MigrationManager
         return $this->actualNode;
     }
 
+    /**
+     * Return the missing node.
+     *
+     * @return Node
+     */
     public function getMissingNode()
     {
         if (is_null($this->missingNode)) {
@@ -194,7 +304,13 @@ class MigrationManager
         return $this->missingNode;
     }
 
-    protected function getFieldsFromNodes(array $nodes)
+    /**
+     * Return all fields for each nodes
+     *
+     * @param  array $nodes
+     * @return array
+     */
+    protected function getFieldsFromNodes(array $nodes): array
     {
         $table = [];
 
@@ -205,24 +321,48 @@ class MigrationManager
         return $table;
     }
 
+    /**
+     * Return all wanted fields.
+     *
+     * @return array
+     */
     public function getDefinedFields()
     {
         return $this->getFieldsFromNodes($this->getWantedNode());
     }
 
+    /**
+     * Return all actual fields.
+     *
+     * @return array
+     */
     public function getDatabaseFields()
     {
         return $this->getFieldsFromNodes($this->getActualNode());
     }
 
-    protected function generateMigrationFile($viewName, $data, $path)
+    /**
+     * Generate a migration file based on data given.
+     *
+     * @param  string $viewName
+     * @param  array  $data
+     * @param  string $path
+     * @return void
+     */
+    protected function generateMigrationFile(string $viewName, array $data, string $path)
     {
-        file_put_contents($path, view($viewName, array_merge([
+        \file_put_contents($path, view($viewName, \array_merge([
             'php' => '<?php',
             'blueprintVar' => '$table',
         ], $data))->render());
     }
 
+    /**
+     * Generate a migration for a specific meta node.
+     *
+     * @param  MetaNode $metaNode
+     * @return string    Generated file.
+     */
     protected function generateMigration(MetaNode $metaNode)
     {
         $type = $metaNode->getType();
@@ -249,6 +389,11 @@ class MigrationManager
         return $fileName;
     }
 
+    /**
+     * Clear all migrations.
+     *
+     * @return array  All files cleared.
+     */
     public function clearMigrations()
     {
         $fs = new Filesystem;
@@ -262,6 +407,11 @@ class MigrationManager
         }, $this->migrationFiles);
     }
 
+    /**
+     * Generate all missing migrations.
+     *
+     * @return array  All files generated.
+     */
     public function generateMigrations()
     {
         $generatedFiles = [];

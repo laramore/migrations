@@ -40,7 +40,6 @@ class MigrateGenerate extends Command
     /**
      * Create a new migration rollback command instance.
      *
-     * @param  \Illuminate\Database\Migrations\Migrator $migrator
      * @return void
      */
     public function __construct()
@@ -53,9 +52,9 @@ class MigrateGenerate extends Command
     /**
      * Execute the console command.
      *
-     * @return void
+     * @return boolean
      */
-    public function handle()
+    public function handle(): bool
     {
         $this->migrator->setConnection($this->option('database'));
         $files = $this->migrator->getMigrationFiles($this->getMigrationPaths());
@@ -70,13 +69,13 @@ class MigrateGenerate extends Command
                 }
             }
 
-            if (count(array_diff(array_keys($files), $ranMigrations))) {
+            if (\count(\array_diff(\array_keys($files), $ranMigrations))) {
                 $this->error('All migrations are not launched');
 
                 return false;
             }
         } else {
-            if (count($files)) {
+            if (\count($files)) {
                 $this->error('No migrations were launched. Clear them or run all of them before generating new ones');
 
                 return false;
@@ -92,6 +91,8 @@ class MigrateGenerate extends Command
         } else {
             $this->warn('No new migrations to generate');
         }
+
+        return true;
     }
 
     /**
@@ -110,7 +111,7 @@ class MigrateGenerate extends Command
             })->all();
         }
 
-        return array_merge(
+        return \array_merge(
             $this->migrator->paths(), [$this->getMigrationPath()]
         );
     }

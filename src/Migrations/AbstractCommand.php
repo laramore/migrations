@@ -12,16 +12,37 @@ namespace Laramore\Migrations;
 
 abstract class AbstractCommand
 {
+    /**
+     * Defined reversed command.
+     *
+     * @var AbstractCommand
+     */
     protected $reverse;
 
+    /**
+     * Define the reversed command.
+     *
+     * @param AbstractCommand $reverse
+     * @return void
+     */
     public function setReverse(AbstractCommand $reverse)
     {
         $this->reverse = $reverse;
     }
 
+    /**
+     * Generate a new reversed command.
+     *
+     * @return AbstractCommand
+     */
     abstract protected function generateReverse(): AbstractCommand;
 
-    public function getReverse()
+    /**
+     * Return the reversed command.
+     *
+     * @return AbstractCommand
+     */
+    public function getReverse(): AbstractCommand
     {
         if ($this->reverse) {
             return $this->reverse;

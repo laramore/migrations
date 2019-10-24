@@ -18,6 +18,11 @@ use Laramore\Database\Schema\Builder;
  */
 class Schema extends BaseSchema
 {
+    /**
+     * Tell the facade if the migration manager is loading.
+     *
+     * @return boolean [description]
+     */
     public static function isProxied()
     {
         return MigrationManager::isLoadingMigrations();

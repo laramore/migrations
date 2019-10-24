@@ -14,10 +14,17 @@ use Laramore\Meta;
 
 class Index extends Constraint
 {
+    /**
+     * Create a new index command.
+     *
+     * @param string $tableName
+     * @param string $type
+     * @param array  $fields
+     */
     public function __construct(string $tableName, string $type, array $fields)
     {
         $this->constraint = $type;
-        $needs = array_map(function ($field) use ($tableName) {
+        $needs = \array_map(function ($field) use ($tableName) {
             return [
                 'table' => $tableName,
                 'field' => $field,
@@ -30,17 +37,24 @@ class Index extends Constraint
     /**
      * Create a default index name for the table.
      *
-     * @param  string $type
-     * @param  array  $columns
      * @return string
      */
-    public function getIndexName()
+    public function getIndexName(): string
     {
-        return str_replace(['-', '.'], '_', strtolower($this->getTableName().'_'.implode('_', $this->getAttname()[0]).'_'.$this->constraint));
+        return \str_replace(['-', '.'], '_', \implode('_', [
+            \strtolower($this->getTableName()),
+            \implode('_', $this->getAttname()[0]),
+            $this->constraint,
+        ]));
     }
 
-    public function getField()
+    /**
+     * Return a distinct field format.
+     *
+     * @return string
+     */
+    public function getField(): string
     {
-        return $this->tableName.'.'.implode('_', $this->getCommand()->getAttname()[0]).'_'.$this->constraint.'+';
+        return $this->tableName.'.'.\implode('_', $this->getCommand()->getAttname()[0]).'_'.$this->constraint.'+';
     }
 }

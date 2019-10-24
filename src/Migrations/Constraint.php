@@ -14,11 +14,42 @@ use Laramore\Meta;
 
 class Constraint extends AbstractCommand
 {
+    /**
+     * The command is defined for this table.
+     *
+     * @var string
+     */
     protected $tableName;
+
+    /**
+     * Required fields.
+     *
+     * @var array
+     */
     protected $needs;
+
+    /**
+     * Command to run when this constraint is satisfied.
+     *
+     * @var AbstractCommand
+     */
     protected $command;
+
+    /**
+     * Type of the constraint.
+     *
+     * @var string
+     */
     protected $constraint = 'foreign';
 
+    /**
+     * Create a new constraint for a specific field, with requirements and properties attached to this constraint.
+     *
+     * @param string       $tableName
+     * @param string|array $attname
+     * @param array        $needs
+     * @param array        $properties
+     */
     public function __construct(string $tableName, $attname, array $needs, array $properties)
     {
         $this->tableName = $tableName;
@@ -26,31 +57,51 @@ class Constraint extends AbstractCommand
         $this->command = new Command($tableName, $this->constraint, $attname, $properties);
     }
 
-    public function getNodes()
-    {
-        return $this->nodes;
-    }
-
-    public function getTableName()
+    /**
+     * Return the table name.
+     *
+     * @return string
+     */
+    public function getTableName(): string
     {
         return $this->tableName;
     }
 
+    /**
+     * Return the attribute name
+     *
+     * @return string|array
+     */
     public function getAttname()
     {
         return $this->command->getAttname();
     }
 
+    /**
+     * Return the associated command.
+     *
+     * @return AbstractCommand
+     */
     public function getCommand()
     {
         return $this->command;
     }
 
-    public function getNeeds()
+    /**
+     * Return all requirements for this constraint.
+     *
+     * @return array
+     */
+    public function getNeeds(): array
     {
         return $this->needs;
     }
 
+    /**
+     * Return a distinct field formats.
+     *
+     * @return array
+     */
     public function getFields(): array
     {
         $fields = [];
@@ -59,10 +110,15 @@ class Constraint extends AbstractCommand
             $fields[] = $need['table'].'.'.$need['field'];
         }
 
-        return array_unique($fields);
+        return \array_unique($fields);
     }
 
-    public function getField()
+    /**
+     * Return a distinct constraint field format.
+     *
+     * @return string
+     */
+    public function getField(): string
     {
         return $this->getCommand()->getField().'*';
     }
@@ -70,17 +126,21 @@ class Constraint extends AbstractCommand
     /**
      * Create a default index name for the table.
      *
-     * @param  string $type
-     * @param  array  $columns
      * @return string
      */
     public function getIndexName()
     {
-        return str_replace(['-', '.'], '_', strtolower($this->getTableName().'_'.$this->getAttname().'_'.$this->constraint));
+        return \str_replace(['-', '.'], '_', \strtolower($this->getTableName().'_'.$this->getAttname().'_'.$this->constraint));
     }
 
+    /**
+     * Generate a new reversed command.
+     *
+     * @return AbstractCommand
+     */
     protected function generateReverse(): AbstractCommand
     {
-        return new DropCommand($this->getTableName(), 'drop'.ucfirst($this->constraint), $this->getAttname(), $this->getIndexName(), $this->getCommand());
+        return new DropCommand($this->getTableName(), 'drop'.\ucfirst($this->constraint), $this->getAttname(),
+            $this->getIndexName(), $this->getCommand());
     }
 }

@@ -21,21 +21,33 @@ use Laramore\Facades\{
 
 class BlueprintNode extends MetaNode
 {
+    /**
+     * Create a node based on a blueprint definition.
+     *
+     * @param Blueprint $blueprint
+     */
     public function __construct(Blueprint $blueprint)
     {
-        $nodes = array_merge($blueprint->getColumns(), $commands = array_filter($blueprint->getCommands(), function (Fluent $command) {
+        $commands = \array_filter($blueprint->getCommands(), function (Fluent $command) {
             return $command->name !== 'create';
-        }));
+        });
+        $nodes = \array_merge($blueprint->getColumns(), $commands);
 
-        $this->type = (count($commands) === count($blueprint->getCommands()) ? 'update' : 'create');
+        $this->type = (\count($commands) === \count($blueprint->getCommands()) ? 'update' : 'create');
         $this->tableNames = [$blueprint->getTable()];
 
         $this->setNodes($nodes);
     }
 
+    /**
+     * Define the sub nodes/commands.
+     *
+     * @param array $nodes
+     * @return void
+     */
     protected function setNodes(array $nodes)
     {
-        $this->nodes = array_map(function ($node) {
+        $this->nodes = \array_map(function ($node) {
             if ($node instanceof ColumnDefinition) {
                 return $this->columnToCommand($node);
             } else if ($node instanceof Fluent) {
@@ -44,31 +56,66 @@ class BlueprintNode extends MetaNode
         }, $nodes);
     }
 
+    /**
+     * This method is called when the node is asked to be optimized.
+     * Only optimize if a meta exists for this table.
+     *
+     * @return void
+     */
     protected function optimizing()
     {
         if (MetaManager::hasForTableName($this->getTableName())) {
             parent::optimizing();
+        } else {
+            $this->unpack();
         }
     }
 
-    protected function cleanUnrelevantAttributes(Fluent $column)
+    /**
+     * Remove from fluent command all unrelevant attributes.
+     *
+     * @param  Fluent $command
+     * @return void
+     */
+    protected function cleanUnrelevantAttributes(Fluent $command)
     {
-        foreach ($column->getAttributes() as $key => $value) {
-            if (is_null($value) || ($value === false && $key !== 'default')) {
-                unset($column->$key);
+        foreach ($command->getAttributes() as $key => $value) {
+            if (\is_null($value) || ($value === false && $key !== 'default')) {
+                unset($command->$key);
             }
         }
 
-        if ($column->precision === 0) {
-            unset($column->precision);
+        if ($command->precision === 0) {
+            unset($command->precision);
         }
     }
 
-    protected function popTypeFromColumn(ColumnDefinition $column)
+    /**
+     * Pop a definition from a column.
+     *
+     * @param  Fluent $column
+     * @param  string $name
+     * @return mixed
+     */
+    protected function popFromColumn(Fluent $column, string $name)
     {
-        $type = $column->type;
-        unset($column->type);
+        $value = $column->$name;
+        unset($column->$name);
 
+        return $value;
+    }
+
+    /**
+     * Pop the type definition from a column definition.
+     *
+     * @param  ColumnDefinition $column
+     * @return string
+     */
+    protected function popTypeFromColumn(ColumnDefinition $column): string
+    {
+        $type = $this->popFromColumn($column, 'type');
+
+        // Here, if our field is an integer, we need to handle unsigned and increment integers.
         if ($type === TypeManager::integer()->migration) {
             if ($column->unsigned) {
                 unset($column->unsigned);
@@ -86,15 +133,13 @@ class BlueprintNode extends MetaNode
         return $type;
     }
 
-    protected function popFromColumn(Fluent $column, string $name)
-    {
-        $value = $column->$name;
-        unset($column->$name);
-
-        return $value;
-    }
-
-    protected function getNeedsForCommand(Fluent $command)
+    /**
+     * Return all requirements for a fluent command.
+     *
+     * @param  Fluent $command
+     * @return array
+     */
+    protected function getNeedsForCommand(Fluent $command): array
     {
         return [
             [
@@ -108,7 +153,13 @@ class BlueprintNode extends MetaNode
         ];
     }
 
-    public function columnToCommand(ColumnDefinition $column)
+    /**
+     * Transform a column definition to a migration command.
+     *
+     * @param  ColumnDefinition $column
+     * @return Command
+     */
+    public function columnToCommand(ColumnDefinition $column): Command
     {
         $this->cleanUnrelevantAttributes($column);
 
@@ -118,6 +169,12 @@ class BlueprintNode extends MetaNode
         return new Command($this->getTableName(), $type, $attname, $column->getAttributes());
     }
 
+    /**
+     * Transform a fluent command to a migration constraint.
+     *
+     * @param  Fluent $command
+     * @return Constraint
+     */
     public function commandToConstraint(Fluent $command)
     {
         $this->cleanUnrelevantAttributes($command);
@@ -134,6 +191,7 @@ class BlueprintNode extends MetaNode
             $constraint = new Index($this->getTableName(), $type, $command->columns);
         }
 
+        // If the user defines itself the index name, it is required to put it.
         if ($constraint->getIndexName() !== $index) {
             $constraint->getCommand()->setProperty('index', $index);
         }

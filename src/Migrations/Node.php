@@ -12,7 +12,15 @@ namespace Laramore\Migrations;
 
 class Node extends AbstractNode
 {
-    protected function constraintCanMove(Constraint $node, int $firstIndex, int $lastIndex)
+    /**
+     * Indicate if a constraint can move from an index to to another.
+     *
+     * @param  Constraint $node
+     * @param  integer    $firstIndex
+     * @param  integer    $lastIndex
+     * @return boolean
+     */
+    protected function constraintCanMove(Constraint $node, int $firstIndex, int $lastIndex): bool
     {
         for ($i = $firstIndex; $i < $lastIndex; $i++) {
             $nodeToCheck = $this->getNodes()[$i];
@@ -25,13 +33,25 @@ class Node extends AbstractNode
         return true;
     }
 
-    protected function getConstraintTables(Constraint $constraint)
+    /**
+     * Return all required tables for a constraint.
+     *
+     * @param  Constraint $constraint
+     * @return array
+     */
+    protected function getConstraintTables(Constraint $constraint): array
     {
         return \array_unique(\array_map(function (array $need) {
             return $need['table'];
         }, $constraint->getNeeds()));
     }
 
+    /**
+     * Return all required tables from many constraints.
+     *
+     * @param  MetaNode $node
+     * @return array
+     */
     protected function getMetaConstraintTables(MetaNode $node)
     {
         return \array_unique(\array_merge([], ...\array_map(function (Constraint $constraint) {
@@ -39,6 +59,13 @@ class Node extends AbstractNode
         }, $node->getConstraintNodes())));
     }
 
+    /**
+     * Swap two nodes from their index.
+     *
+     * @param  integer $firstIndex
+     * @param  integer $secondIndex
+     * @return void
+     */
     protected function swapNodes(int $firstIndex, int $secondIndex)
     {
         if ($secondIndex < $firstIndex) {
@@ -52,7 +79,12 @@ class Node extends AbstractNode
         }
     }
 
-    public function orderBeforeOrganizing()
+    /**
+     * Pre order all nodes by grouping them by table.
+     *
+     * @return void
+     */
+    protected function orderBeforeOrganizing()
     {
         $this->pack();
 
@@ -81,7 +113,7 @@ class Node extends AbstractNode
         $jToAvoid = [];
 
         for ($i = 0; $i < $nbrOfNodes; $i++) {
-            $jToAvoid[$i] = $jToAvoid[$i] ?? null;
+            $jToAvoid[$i] = ($jToAvoid[$i] ?? null);
 
             $node1 = $this->getNodes()[$i];
             $tableNames1 = $this->getMetaConstraintTables($node1);
@@ -98,7 +130,10 @@ class Node extends AbstractNode
                         continue;
                     }
 
-                    if (\count($tableNames1) > \count($tableNames2) || (\count($tableNames1) === \count($tableNames2) && \in_array($node2->getTableName(), $tableNames1))) {
+                    $cond = \count($tableNames1) > \count($tableNames2) ||
+                        (\count($tableNames1) === \count($tableNames2) && \in_array($node2->getTableName(), $tableNames1));
+
+                    if ($cond) {
                         // Avoid swap looping between 2 nodes pointing one from the other.
                         $jToAvoid[$i] = \in_array($node1->getTableName(), $tableNames2) ? $j : null;
 
@@ -112,6 +147,11 @@ class Node extends AbstractNode
         }
     }
 
+    /**
+     * This method is called when the node is asked to be organized.
+     *
+     * @return void
+     */
     protected function organizing()
     {
         $this->orderBeforeOrganizing();
@@ -189,6 +229,11 @@ class Node extends AbstractNode
         }
     }
 
+    /**
+     * This method is called when the node is asked to be optimized.
+     *
+     * @return void
+     */
     protected function optimizing()
     {
         $this->unpack();
@@ -301,34 +346,49 @@ class Node extends AbstractNode
         $this->pack();
     }
 
-    protected function propertiesDiff($aArray1, $aArray2)
+    /**
+     * Make a diff on command properties.
+     *
+     * @param  array $properties1
+     * @param  array $properties2
+     * @return array
+     */
+    protected function propertiesDiff(array $properties1, array $properties2): array
     {
-        $aReturn = [];
+        $properties = [];
 
-        foreach ($aArray1 as $mKey => $mValue) {
-            if (array_key_exists($mKey, $aArray2)) {
-                if (is_array($mValue)) {
-                    $aRecursiveDiff = $this->propertiesDiff($mValue, $aArray2[$mKey]);
+        foreach ($properties1 as $key1 => $value1) {
+            if (\array_key_exists($key1, $properties2)) {
+                if (\is_array($value1)) {
+                    $diff = $this->propertiesDiff($value1, $properties2[$key1]);
 
-                    if (\count($aRecursiveDiff)) {
-                        $aReturn[$mKey] = $aRecursiveDiff;
+                    if (\count($diff)) {
+                        $properties[$key1] = $diff;
                     }
                 } else {
-                    if ($mValue != $aArray2[$mKey]) {
-                        $aReturn[$mKey] = $mValue;
+                    if ($value1 != $properties2[$key1]) {
+                        $properties[$key1] = $value1;
                     }
                 }
             } else {
-                $aReturn[$mKey] = $mValue;
+                $properties[$key1] = $value1;
             }
         }
 
-        return $aReturn;
+        return $properties;
     }
 
-    protected function getResultedCommand(array &$nodes, Command $command)
+    /**
+     * Return the command or generate a change command depending on the actual nodes.
+     *
+     * @param  array   $nodes
+     * @param  Command $command
+     * @return Command|null
+     */
+    protected function getResultedCommand(array &$nodes, Command $command): ?Command
     {
         foreach ($nodes as $key => $node) {
+            // If an identical command exists, check the differences.
             if ($node instanceof Command && $node->getField() === $command->getField()) {
                 $nodeProperties = $node->getProperties();
                 $commandProperties = $command->getProperties();
@@ -339,8 +399,10 @@ class Node extends AbstractNode
 
                 unset($nodes[$key]);
 
+                // If they are differences in properties, try to generate a change command.
                 if ($count = (\count($newProperties) + \count($oldProperties))) {
-                    if ($count === 2 && \count(array_diff([$node->getType(), $commandType], ['datetime', 'timestamp'])) === 0) {
+                    // For some types, the difference needs to be calculated differently.
+                    if ($count === 2 && !\count(\array_diff([$node->getType(), $commandType], ['datetime', 'timestamp']))) {
                         return null;
                     }
 
@@ -349,21 +411,31 @@ class Node extends AbstractNode
                         $newProperties['allowed'] = $commandProperties['allowed'];
                     }
 
-                    return new ChangeCommand($command->getTableName(), $commandType, $command->getAttname(), $newProperties, $oldProperties);
+                    return new ChangeCommand($command->getTableName(), $commandType, $command->getAttname(),
+                        $newProperties, $oldProperties);
                 } else {
                     return null;
                 }
             }
         }
 
+        // Return the command if it needs to be created entierly.
         return $command;
     }
 
-    protected function getResultedConstraint(array &$nodes, Constraint $constraint)
+    /**
+     * Return the constraint with or not a drop command depending on the actual nodes.
+     *
+     * @param  array      $nodes
+     * @param  Constraint $constraint
+     * @return Constraint|null
+     */
+    protected function getResultedConstraint(array &$nodes, Constraint $constraint): ?Constraint
     {
         $command = $constraint->getCommand();
 
         foreach ($nodes as $key => $node) {
+            // If an identical constraints exists, check the differences.
             if ($node instanceof Constraint) {
                 $nodeCommand = $node->getCommand();
 
@@ -373,6 +445,7 @@ class Node extends AbstractNode
 
                     unset($nodes[$key]);
 
+                    // If they are changes, drop the last constraint and create the new one.
                     if ((\count($newProperties) + \count($oldProperties))) {
                         $dropNode = $node->getReverse();
                         $reversedCommand = $dropNode->getReverse();
@@ -390,15 +463,23 @@ class Node extends AbstractNode
             }
         }
 
+        // Return the constraint if it needs to be created entierly.
         return $constraint;
     }
 
+    /**
+     * Calculate and return a new node from the difference between this node and another.
+     *
+     * @param  Node $node
+     * @return Node
+     */
     public function diff(Node $node): Node
     {
         $nodes = (new static($this->getNodes()))->unpack()->getNodes();
         $substractNodes = (new static($node->getNodes()))->unpack()->getNodes();
         $diffNodes = [];
 
+        // Compare for each sub nodes of this node.
         foreach ($nodes as $nodeToCheck) {
             if ($nodeToCheck instanceof Command) {
                 $resultedNode = $this->getResultedCommand($substractNodes, $nodeToCheck);
@@ -415,10 +496,7 @@ class Node extends AbstractNode
             }
         }
 
-        foreach ($substractNodes as $nodeToSubstract) {
-            $diffNodes[] = $nodeToSubstract;
-        }
-
-        return (new static($diffNodes));
+        // Add all diff nodes and all new sub nodes.
+        return (new static(\array_merge([], $diffNodes, $substractNodes)));
     }
 }

@@ -32,7 +32,12 @@ class Builder extends BaseBuilder
         static::$blueprints[] = $blueprint;
     }
 
-    public static function getBlueprints()
+    /**
+     * Return all created blueprints.
+     *
+     * @return array
+     */
+    public static function getBlueprints(): array
     {
         return static::$blueprints;
     }

@@ -12,31 +12,59 @@ namespace Laramore\Migrations;
 
 class ChangeCommand extends Command
 {
-    protected $oldProperties;
+    /**
+     * All reversed properties for a specific command/field.
+     *
+     * @var array
+     */
+    protected $reversedProperties;
 
-    public function __construct(string $tableName, string $type, string $attname, array $properties, array $oldProperties)
+    /**
+     * Build a change command object.
+     *
+     * @param string $tableName
+     * @param string $type
+     * @param string $attname
+     * @param array  $properties
+     * @param array  $reversedProperties
+     */
+    public function __construct(string $tableName, string $type, string $attname, array $properties, array $reversedProperties)
     {
         parent::__construct($tableName, $type, $attname, $properties);
 
-        $this->oldProperties = $oldProperties;
+        $this->reversedProperties = $reversedProperties;
     }
 
-    public function getProperties()
+    /**
+     * Return the command properties.
+     *
+     * @return array
+     */
+    public function getProperties(): array
     {
-        return array_merge([
-            $this->type => $this->attname,
-        ], $this->properties, [
+        return array_merge(parent::getProperties(), [
             'change' => [],
         ]);
     }
 
-    public function getOldProperties()
+    /**
+     * Return the reversed command properties.
+     *
+     * @return array
+     */
+    public function getReversedProperties(): array
     {
-        return $this->oldProperties;
+        return $this->reversedProperties;
     }
 
-    public function getReverse()
+    /**
+     * Generate a new reversed command.
+     *
+     * @return AbstractCommand
+     */
+    protected function generateReverse(): AbstractCommand
     {
-        return new ChangeCommand($this->getTableName(), $this->getType(), $this->getAttname(), $this->oldProperties, $this->properties);
+        return new ChangeCommand($this->getTableName(), $this->getType(), $this->getAttname(),
+            $this->getReversedProperties(), parent::getProperties());
     }
 }

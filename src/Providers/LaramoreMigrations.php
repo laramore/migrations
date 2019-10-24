@@ -17,17 +17,33 @@ use Laramore\MigrationManager;
 
 class LaramoreMigrations extends ServiceProvider
 {
+    /**
+     * Before booting, create our definition for migrations.
+     *
+     * @return void
+     */
     public function register()
     {
         $this->app->booting([$this, 'bootingCallback']);
     }
 
     /**
-     * Load views
+     * During booting, load our migration views, Migration singletons.
      *
      * @return void
      */
     public function boot()
+    {
+        $this->loadViews();
+        $this->addSingletons();
+    }
+
+    /**
+     * Laod all views required for the migrations generation.
+     *
+     * @return void
+     */
+    protected function loadViews()
     {
         $viewPath = __DIR__.'/../../views';
         $this->loadViewsFrom($viewPath, 'laramore');
@@ -35,18 +51,35 @@ class LaramoreMigrations extends ServiceProvider
         $this->publishes([
             $viewPath => resource_path('views/vendor/laramore'),
         ]);
+    }
 
+    /**
+     * Add MigrationManager as a singleton.
+     *
+     * @return void
+     */
+    protected function addSingletons()
+    {
         $this->app->singleton('MigrationManager', function() {
             return new MigrationManager($this->app['migrator']);
         });
     }
 
+    /**
+     * Before booting, add a new type definition and fix increment default value.
+     *
+     * @return void
+     */
     public function bootingCallback()
     {
-        TypeManager::define('migration');
-
         if (TypeManager::has('increment')) {
-            TypeManager::increment()->migration = 'increments';
+            $incType = TypeManager::increment();
+
+            if (!$incType->has('migration')) {
+                $incType->migration = 'increments';
+            }
         }
+
+        TypeManager::define('migration');
     }
 }

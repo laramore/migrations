@@ -18,11 +18,20 @@ use Laramore\Facades\{
 
 class SchemaNode extends Node
 {
+    /**
+     * Generate schema nodes with Laravel migrations.
+     */
     public function __construct()
     {
         $this->setNodes(Builder::getBlueprints());
     }
 
+    /**
+     * Define the sub nodes/commands.
+     *
+     * @param array $nodes
+     * @return void
+     */
     protected function setNodes(array $nodes)
     {
         $this->nodes = array_map(function (Blueprint $node) {
@@ -30,13 +39,23 @@ class SchemaNode extends Node
         }, $nodes);
     }
 
+    /**
+     * This method is called when the node is asked to be organized.
+     *
+     * @return void
+     */
     protected function organizing()
     {
-        // Cannot organize a DatabaseNode.
+        $this->unpack();
     }
 
+    /**
+     * This method is called when the node is asked to be optimized.
+     *
+     * @return void
+     */
     protected function optimizing()
     {
-        // Cannot optimize a DatabaseNode.
+        $this->pack();
     }
 }

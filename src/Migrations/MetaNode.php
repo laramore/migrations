@@ -17,14 +17,35 @@ use Laramore\Meta;
 
 class MetaNode extends AbstractNode
 {
+    /**
+     * Define the type of this meta node: create, update or delete.
+     *
+     * @var string
+     */
     protected $type;
-    protected $nodes = [];
-    protected $constraints = [];
-    protected $indexes = [];
-    protected $organized = false;
-    protected $optimized = false;
 
-    public function __construct(array $nodes=[], string $tableName, string $type='create')
+    /**
+     * All constraint nodes are grouped here after organization.
+     *
+     * @var array
+     */
+    protected $constraints = [];
+
+    /**
+     * All index nodes are grouped here after organization.
+     *
+     * @var array
+     */
+    protected $indexes = [];
+
+    /**
+     * Create a meta node with sub nodes specific to a table.
+     *
+     * @param array  $nodes
+     * @param string $tableName
+     * @param string $type
+     */
+    public function __construct(array $nodes, string $tableName, string $type='create')
     {
         $this->type = $type;
         $this->tableNames = [$tableName];
@@ -32,6 +53,12 @@ class MetaNode extends AbstractNode
         $this->setNodes($nodes);
     }
 
+    /**
+     * Define the sub nodes/commands.
+     *
+     * @param array $nodes
+     * @return void
+     */
     protected function setNodes(array $nodes)
     {
         $this->nodes = [];
@@ -39,6 +66,12 @@ class MetaNode extends AbstractNode
         $this->addNodes($nodes);
     }
 
+    /**
+     * Add sub nodes and force this node to be unoptimized and unorganized.
+     *
+     * @param array $nodes
+     * @return void
+     */
     public function addNodes(array $nodes)
     {
         $nodes = \array_map(function ($node) {
@@ -57,88 +90,148 @@ class MetaNode extends AbstractNode
         $this->nodes = \array_merge($this->nodes, $nodes);
     }
 
+    /**
+     * Return all the sub commands, constraints and indexes.
+     *
+     * @return array
+     */
     public function getNodes(): array
     {
-        return array_merge(
-            $this->nodes,
+        return \array_merge(
+            parent::getNodes(),
             $this->constraints,
             $this->indexes
         );
     }
 
+    /**
+     * Return only the sub nodes/commands.
+     *
+     * @return array
+     */
     public function getFieldNodes(): array
     {
         return $this->organize()->nodes;
     }
 
+    /**
+     * Return only the sub constraints.
+     *
+     * @return array
+     */
     public function getConstraintNodes(): array
     {
         return $this->organize()->constraints;
     }
 
+    /**
+     * Return only the sub indexes.
+     *
+     * @return array
+     */
     public function getIndexNodes(): array
     {
         return $this->organize()->indexes;
     }
 
+    /**
+     * Return all constraints command.
+     *
+     * @return array
+     */
     public function getConstraintCommands(): array
     {
-        return array_map(function ($constraint) {
+        return \array_map(function ($constraint) {
             return $constraint->getCommand();
         }, $this->getConstraintNodes());
     }
 
+    /**
+     * Return all indexes command.
+     *
+     * @return array
+     */
     public function getIndexCommands(): array
     {
-        return array_map(function ($index) {
+        return \array_map(function ($index) {
             return $index->getCommand();
         }, $this->getIndexNodes());
     }
 
+    /**
+     * Return all reversed commands.
+     *
+     * @return array
+     */
     public function getFieldReverseCommands(): array
     {
-        return array_filter(array_map(function ($constraint) {
+        return \array_filter(\array_map(function ($constraint) {
             return $constraint->getReverse();
         }, $this->getFieldNodes()));
     }
 
+    /**
+     * Return all reversed constraints.
+     *
+     * @return array
+     */
     public function getConstraintReverseCommands(): array
     {
-        return array_filter(array_map(function ($constraint) {
+        return \array_filter(\array_map(function ($constraint) {
             return $constraint->getReverse();
         }, $this->getConstraintNodes()));
     }
 
+    /**
+     * Return all reversed indexes.
+     *
+     * @return array
+     */
     public function getIndexReverseCommands(): array
     {
-        return array_filter(array_map(function ($index) {
+        return \array_filter(\array_map(function ($index) {
             return $index->getReverse();
         }, $this->getIndexNodes()));
     }
 
+    /**
+     * Return the meta managing this table.
+     *
+     * @return Meta
+     */
     public function getMeta(): Meta
     {
         return MetaManager::getForTableName($this->getTableName());
     }
 
+    /**
+     * Return the table used for this meta.
+     *
+     * @return string
+     */
     public function getTableName(): string
     {
         return $this->tableNames[0];
     }
 
+    /**
+     * Return the type of this meta node.
+     *
+     * @return string
+     */
     public function getType(): string
     {
         return $this->type;
     }
 
-    public function setType(string $type)
-    {
-        $this->type = $type;
-    }
-
+    /**
+     * This method is called when the node is asked to be organized.
+     *
+     * @return void
+     */
     protected function organizing()
     {
-        $nbrOfNodes = count($this->getNodes());
+        $nbrOfNodes = \count($this->getNodes());
 
         for ($i = 0; $i < $nbrOfNodes; $i++) {
             $node = $this->getNodes()[$i];
@@ -156,11 +249,16 @@ class MetaNode extends AbstractNode
         }
     }
 
+    /**
+     * This method is called when the node is asked to be optimized.
+     *
+     * @return void
+     */
     protected function optimizing()
     {
         if ($this->type !== 'delete') {
             $fields = $this->getMeta()->getFields();
-            $nbrOfNodes = count($this->getNodes());
+            $nbrOfNodes = \count($this->getNodes());
             $unorderedNodes = $this->nodes;
             $this->nodes = [];
 
@@ -176,13 +274,18 @@ class MetaNode extends AbstractNode
                 }
             }
 
-            if (count($unorderedNodes) !== count($this->nodes)) {
+            if (\count($unorderedNodes) !== \count($this->nodes)) {
                 throw new \Exception('Some commands are not meant to be created by this meta');
             }
         }
     }
 
-    public function getUp()
+    /**
+     * Generate the up migration for this meta node.
+     *
+     * @return array
+     */
+    public function getUp(): array
     {
         switch ($this->getType()) {
             case 'create':
@@ -210,6 +313,11 @@ class MetaNode extends AbstractNode
         }
     }
 
+    /**
+     * Generate the down migration for this meta node.
+     *
+     * @return array
+     */
     public function getDown()
     {
         switch ($this->getType()) {
