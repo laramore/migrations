@@ -106,7 +106,7 @@ class Constraint extends AbstractCommand
     {
         $fields = [];
 
-        foreach ($this->needs as $need) {
+        foreach ($this->getNeeds() as $need) {
             $fields[] = $need['table'].'.'.$need['field'];
         }
 
@@ -140,7 +140,7 @@ class Constraint extends AbstractCommand
      */
     protected function generateReverse(): AbstractCommand
     {
-        return new DropCommand($this->getTableName(), 'drop'.\ucfirst($this->constraint), $this->getAttname(),
-            $this->getIndexName(), $this->getCommand());
+        return new DropConstraint($this->getTableName(), $this->getAttname(),
+            $this->getIndexName(), $this);
     }
 }

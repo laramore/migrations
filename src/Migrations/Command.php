@@ -150,6 +150,6 @@ class Command extends AbstractCommand
      */
     protected function generateReverse(): AbstractCommand
     {
-        return new DropCommand($this->getTableName(), 'dropColumn', $this->getAttname(), $this->getAttname(), $this);
+        return new DropCommand($this->getTableName(), $this->getAttname(), $this);
     }
 }
