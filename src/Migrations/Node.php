@@ -423,7 +423,11 @@ class Node extends AbstractNode
             }
         }
 
-        // Add all diff nodes and all new sub nodes.
-        return new static(\array_merge([], $diffNodes, $substractNodes));
+        // Now, if some nodes are not handled by this node, we need to reverse them.
+        foreach ($substractNodes as $removedNode) {
+            $diffNodes[] = $removedNode->getReverse();
+        }
+
+        return new static($diffNodes);
     }
 }

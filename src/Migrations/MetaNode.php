@@ -265,18 +265,17 @@ class MetaNode extends AbstractNode
             foreach ($fields as $field) {
                 $attname = $field->getAttname();
 
-                foreach ($unorderedNodes as $node) {
+                foreach ($unorderedNodes as $key => $node) {
                     if ($node->getAttname() === $attname) {
                         $this->nodes[] = $node;
+                        unset($unorderedNodes[$key]);
 
                         break;
                     }
                 }
             }
 
-            if (\count($unorderedNodes) !== \count($this->nodes)) {
-                throw new \Exception('Some commands are not meant to be created by this meta');
-            }
+            $this->nodes = \array_merge($this->nodes, $unorderedNodes);
         }
     }
 
