@@ -240,83 +240,6 @@ class Node extends AbstractNode
 
         $nbrOfNodes = \count($this->getNodes());
 
-        // Move all nodes from the same table the lowest possible.
-        // This is possible by grouping them to the latest constraint if existant.
-        for ($i = ($nbrOfNodes - 1); $i > 0; $i--) {
-            $node = $this->getNodes()[$i];
-            $movedNodes = [];
-
-            if ($node instanceof Constraint) {
-                $movingTable = $node->getTableName();
-
-                for ($j = 0; $j <= $i; $j++) {
-                    $nodeToMove = $this->getNodes()[$j];
-                    $moved = false;
-
-                    if (in_array($nodeToMove, $movedNodes)) {
-                        continue;
-                    }
-
-                    if ($nodeToMove instanceof Command) {
-                        if ($nodeToMove->getTableName() === $movingTable) {
-                            for ($k = ($j + 1); $k <= $i; $k++) {
-                                $nodeToCheck = $this->getNodes()[$k];
-
-                                if ($nodeToCheck instanceof Constraint) {
-                                    if (in_array($nodeToMove->getField(), $nodeToCheck->getFields())) {
-                                        $this->moveNode($j, ($k - 1));
-                                        $moved = true;
-                                        $j--;
-                                        break;
-                                    }
-                                }
-                            }
-
-                            if (!$moved && $nodeToMove === $this->getNodes()[$j]) {
-                                // Move after the constraint as it is not applied to this node.
-                                $this->moveNode($j, $i);
-                                $j--;
-                            }
-
-                            $movedNodes[] = $nodeToMove;
-                        }
-                    }
-                }
-            }
-        }
-
-        // Try to move on top all fields by group.
-        for ($i = 0; $i < $nbrOfNodes; $i++) {
-            $node = $this->getNodes()[$i];
-            $movedNodes = [];
-
-            if ($node instanceof Command) {
-                $movingTable = $node->getTableName();
-
-                for ($j = ($nbrOfNodes - 1); $j > $i; $j--) {
-                    $nodeToMove = $this->getNodes()[$j];
-
-                    if (in_array($nodeToMove, $movedNodes)) {
-                        continue;
-                    }
-
-                    if ($nodeToMove instanceof Command) {
-                        if ($nodeToMove->getTableName() === $movingTable) {
-                            $this->moveNode($j, $i);
-                            $movedNodes[] = $nodeToMove;
-                            $j++;
-                        }
-                    } else {
-                        if ($this->constraintCanMove($nodeToMove, $i, $j)) {
-                            $this->moveNode($j, $i);
-                            $movedNodes[] = $nodeToMove;
-                            $j++;
-                        }
-                    }
-                }
-            }
-        }
-
         // Try to pack together all constraints for the same table.
         for ($i = ($nbrOfNodes - 1); $i > 0; $i--) {
             $node = $this->getNodes()[$i];
@@ -479,6 +402,10 @@ class Node extends AbstractNode
         $substractNodes = (new static($node->getNodes()))->unpack()->getNodes();
         $diffNodes = [];
 
+        if (\count($substractNodes) === 0) {
+            return clone $this;
+        }
+
         // Compare for each sub nodes of this node.
         foreach ($nodes as $nodeToCheck) {
             if ($nodeToCheck instanceof Command) {
@@ -497,6 +424,6 @@ class Node extends AbstractNode
         }
 
         // Add all diff nodes and all new sub nodes.
-        return (new static(\array_merge([], $diffNodes, $substractNodes)));
+        return new static(\array_merge([], $diffNodes, $substractNodes));
     }
 }
