@@ -36,7 +36,10 @@
             "providers": [
                 "Laramore\\Providers\\LaramoreMigrations",
                 "Laramore\\Providers\\MigrateCommands"
-            ]
+            ],
+            "aliases": {
+                "Migrations": "Laramore\\Facades\\Migrations"
+            }
         }
     }
 }

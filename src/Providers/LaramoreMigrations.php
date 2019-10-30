@@ -12,8 +12,8 @@ namespace Laramore\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\DB;
-use Laramore\Facades\TypeManager;
 use Laramore\MigrationManager;
+use Types;
 
 class LaramoreMigrations extends ServiceProvider
 {
@@ -54,13 +54,13 @@ class LaramoreMigrations extends ServiceProvider
     }
 
     /**
-     * Add MigrationManager as a singleton.
+     * Add Migrations as a singleton.
      *
      * @return void
      */
     protected function addSingletons()
     {
-        $this->app->singleton('MigrationManager', function() {
+        $this->app->singleton('Migrations', function() {
             return new MigrationManager($this->app['migrator']);
         });
     }
@@ -72,14 +72,14 @@ class LaramoreMigrations extends ServiceProvider
      */
     public function bootingCallback()
     {
-        if (TypeManager::has('increment')) {
-            $incType = TypeManager::increment();
+        if (Types::has('increment')) {
+            $incType = Types::increment();
 
             if (!$incType->has('migration')) {
                 $incType->migration = 'increments';
             }
         }
 
-        TypeManager::define('migration');
+        Types::define('migration');
     }
 }

@@ -15,9 +15,7 @@ use Illuminate\Support\Fluent;
 use Illuminate\Database\Schema\{
     Blueprint, ColumnDefinition
 };
-use Laramore\Facades\{
-    MetaManager, TypeManager
-};
+use Metas, Types;
 
 class BlueprintNode extends MetaNode
 {
@@ -64,7 +62,7 @@ class BlueprintNode extends MetaNode
      */
     protected function optimizing()
     {
-        if (MetaManager::hasForTableName($this->getTableName())) {
+        if (Metas::hasForTableName($this->getTableName())) {
             parent::optimizing();
         } else {
             $this->unpack();
@@ -116,17 +114,17 @@ class BlueprintNode extends MetaNode
         $type = $this->popFromColumn($column, 'type');
 
         // Here, if our field is an integer, we need to handle unsigned and increment integers.
-        if ($type === TypeManager::integer()->migration) {
+        if ($type === Types::integer()->migration) {
             if ($column->unsigned) {
                 unset($column->unsigned);
 
-                $type = TypeManager::unsignedInteger()->migration;
+                $type = Types::unsignedInteger()->migration;
             }
 
             if ($column->autoIncrement) {
                 unset($column->autoIncrement);
 
-                $type = TypeManager::increment()->migration;
+                $type = Types::increment()->migration;
             }
         }
 

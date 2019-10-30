@@ -10,10 +10,8 @@
 
 namespace Laramore\Migrations;
 
-use Laramore\Facades\{
-    MetaManager, MigrationManager
-};
 use Laramore\Meta;
+use Metas, Migrations;
 
 class MetaNode extends AbstractNode
 {
@@ -201,7 +199,7 @@ class MetaNode extends AbstractNode
      */
     public function getMeta(): Meta
     {
-        return MetaManager::getForTableName($this->getTableName());
+        return Metas::getForTableName($this->getTableName());
     }
 
     /**
@@ -327,7 +325,7 @@ class MetaNode extends AbstractNode
                 ];
 
             case 'delete':
-                foreach (MigrationManager::getActualNode()->getNodes() as $metaNode) {
+                foreach (Migrations::getActualNode()->getNodes() as $metaNode) {
                     if ($metaNode->getTableName() === $this->getTableName()) {
                         return [
                             'type' => 'delete',

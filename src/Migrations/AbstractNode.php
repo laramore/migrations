@@ -10,9 +10,7 @@
 
 namespace Laramore\Migrations;
 
-use Laramore\Facades\{
-    MetaManager, MigrationManager
-};
+use Metas, Migrations;
 
 abstract class AbstractNode
 {
@@ -275,7 +273,7 @@ abstract class AbstractNode
         // If we are packing into meta nodes, we need to know if they are already created or not.
         $passedTables = \array_map(function ($node) {
             return $node->getTableName();
-        }, MigrationManager::getActualNode()->getNodes());
+        }, Migrations::getActualNode()->getNodes());
 
         for ($i = 0; $i < \count($this->getNodes()); $i++) {
             $node = $this->getNodes()[$i];
@@ -293,7 +291,7 @@ abstract class AbstractNode
                     $lastIndex = $i;
                     $subNodes = \array_slice($this->nodes, $firstIndex, ($lastIndex - $firstIndex));
 
-                    if (!MetaManager::hasForTableName($commonTable)) {
+                    if (!Metas::hasForTableName($commonTable)) {
                         $metaType = 'delete';
                     } else if (in_array($commonTable, $passedTables)) {
                         $metaType = 'update';
@@ -319,7 +317,7 @@ abstract class AbstractNode
         if (!\is_null($firstIndex)) {
             $subNodes = \array_slice($this->nodes, $firstIndex, (\count($this->getNodes()) - $firstIndex));
 
-            if (!MetaManager::hasForTableName($commonTable)) {
+            if (!Metas::hasForTableName($commonTable)) {
                 $metaType = 'delete';
             } else if (\in_array($commonTable, $passedTables)) {
                 $metaType = 'update';

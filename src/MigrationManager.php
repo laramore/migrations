@@ -12,15 +12,13 @@ namespace Laramore;
 
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Database\Migrations\Migrator;
-use Laramore\Facades\{
-    MetaManager, TypeManager
-};
 use Laramore\Fields\Foreign;
 use Laramore\Interfaces\IsAPrimaryField;
 use Laramore\Migrations\{
     Command, Constraint, DatabaseNode, MetaNode, Node, Index, SchemaNode,
 };
 use Illuminate\Support\Str;
+use Types, Metas;
 
 class MigrationManager
 {
@@ -146,7 +144,7 @@ class MigrationManager
         foreach ($meta->getFields() as $field) {
             $nodes[] = new Command($tableName, $field->getType()->migration, $field->getAttname(), $field->getProperties());
 
-            if ($field instanceof IsAPrimaryField && $field->getType() !== TypeManager::increment()) {
+            if ($field instanceof IsAPrimaryField && $field->getType() !== Types::increment()) {
                 \end($nodes)->setProperty('primary', true);
             }
         }
@@ -214,7 +212,7 @@ class MigrationManager
     {
         $wantedNode = [];
 
-        foreach (MetaManager::all() as $meta) {
+        foreach (Metas::all() as $meta) {
             $nodes = $this->getNodesFromMeta($meta);
 
             if (\count($nodes)) {

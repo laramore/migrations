@@ -12,9 +12,6 @@ namespace Laramore\Migrations;
 
 use Laramore\Database\Schema\Builder;
 use Illuminate\Database\Schema\Blueprint;
-use Laramore\Facades\{
-    MetaManager, TypeManager
-};
 
 class SchemaNode extends Node
 {
