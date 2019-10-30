@@ -140,7 +140,6 @@ class Constraint extends AbstractCommand
      */
     protected function generateReverse(): AbstractCommand
     {
-        return new DropConstraint($this->getTableName(), $this->getAttname(),
-            $this->getIndexName(), $this);
+        return new DropConstraint($this->getTableName(), $this->getIndexName(), $this);
     }
 }
