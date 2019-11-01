@@ -44,6 +44,46 @@ class SchemaNode extends Node
     protected function organizing()
     {
         $this->unpack();
+
+        // Sum up creations, updates and deletions.
+        for ($i = 0; $i < \count($this->nodes); $i++) {
+            $node = $this->nodes[$i];
+
+            if ($node instanceof DropCommand) {
+                $field = $node->getField();
+
+                for ($j = 0; $j < $i; $j++) {
+                    $nodeToCheck = $this->nodes[$j];
+
+                    if ($nodeToCheck instanceof Command && $nodeToCheck->getField() === $field) {
+                        $this->removeNode($i);
+                        $this->removeNode($j--);
+                        $i -= 2;
+
+                        for ($k = $i; $k > 0; $k--) {
+                            if ($nodeToCheck instanceof ChangeCommand && $nodeToCheck->getField() === $field) {
+                                $this->removeNode($k);
+                                $i--;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if ($node instanceof DropConstraint) {
+                $index = $node->getIndexName();
+
+                for ($j = 0; $j < $i; $j++) {
+                    $nodeToCheck = $this->nodes[$j];
+
+                    if ($nodeToCheck instanceof Constraint && $nodeToCheck->getIndexName() === $index) {
+                        $this->removeNode($i);
+                        $this->removeNode($j--);
+                        $i -= 2;
+                    }
+                }
+            }
+        }
     }
 
     /**

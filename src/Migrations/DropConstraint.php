@@ -26,10 +26,22 @@ class DropConstraint extends Constraint
      * @param string     $key
      * @param Constraint $reversedConstraint
      */
-    public function __construct(string $tableName, string $key, Constraint $reversedConstraint)
+    public function __construct(string $tableName, string $key, Constraint $reversedConstraint=null)
     {
-        parent::__construct($tableName, $key, $reversedConstraint->getNeeds(), []);
+        parent::__construct($tableName, $key, \is_null($reversedConstraint) ? [] : $reversedConstraint->getNeeds(), []);
 
-        $this->reverse = $reversedConstraint->getCommand();
+        if (!\is_null($reversedConstraint)) {
+            $this->reverse = $reversedConstraint->getCommand();
+        }
+    }
+
+    /**
+     * Create a default index name for the table.
+     *
+     * @return string
+     */
+    public function getIndexName()
+    {
+        return $this->getAttname();
     }
 }

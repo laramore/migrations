@@ -10,11 +10,13 @@
 
 namespace Laramore\Migrations;
 
-use Laramore\Database\Schema\Builder;
-use Illuminate\Support\Fluent;
+use Illuminate\Support\{
+    Fluent, Str
+};
 use Illuminate\Database\Schema\{
     Blueprint, ColumnDefinition
 };
+use Laramore\Database\Schema\Builder;
 use Metas, Types;
 
 class BlueprintNode extends MetaNode
@@ -180,7 +182,15 @@ class BlueprintNode extends MetaNode
         $type = $this->popFromColumn($command, 'name');
         $index = $this->popFromColumn($command, 'index');
 
-        if ($type === 'foreign') {
+        if (Str::startsWith($type, 'drop')) {
+            if ($type === 'dropColumn') {
+                $column = $this->popFromColumn($command, 'columns')[0];
+
+                return new DropCommand($this->getTableName(), $column);
+            } else {
+                return new DropConstraint($this->getTableName(), $index);
+            }
+        } else if ($type === 'foreign') {
             $needs = $this->getNeedsForCommand($command);
             $column = $this->popFromColumn($command, 'columns')[0];
 

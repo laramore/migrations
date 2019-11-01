@@ -19,7 +19,7 @@ class DropCommand extends Command
      * @param string|mixed $attname
      * @param Command      $reversedCommand
      */
-    public function __construct(string $tableName, $attname, Command $reversedCommand)
+    public function __construct(string $tableName, $attname, Command $reversedCommand=null)
     {
         parent::__construct($tableName, 'dropColumn', $attname, []);
 
