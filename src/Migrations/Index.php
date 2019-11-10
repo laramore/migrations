@@ -57,4 +57,14 @@ class Index extends Constraint
     {
         return $this->tableName.'.'.\implode('_', $this->getCommand()->getAttname()[0]).'_'.$this->constraint.'+';
     }
+
+    /**
+     * Generate a new reversed command.
+     *
+     * @return AbstractCommand
+     */
+    protected function generateReverse(): AbstractCommand
+    {
+        return new DropIndex($this->getTableName(), $this->constraint, $this->getIndexName(), $this);
+    }
 }

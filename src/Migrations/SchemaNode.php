@@ -83,6 +83,25 @@ class SchemaNode extends Node
                     }
                 }
             }
+
+            if ($node instanceof DropIndex) {
+                $index = $node->getIndexName();
+
+                for ($j = 0; $j < $i; $j++) {
+                    $nodeToCheck = $this->nodes[$j];
+
+                    if ($nodeToCheck instanceof Index && $nodeToCheck->getIndexName() === $index) {
+                        $this->removeNode($i);
+                        $this->removeNode($j--);
+                        $i -= 2;
+                    } else if ($nodeToCheck instanceof Command) {
+                        $index = \str_replace(['-', '.'], '_', \strtolower($nodeToCheck->getTableName().'_'.$nodeToCheck->getAttname().'_unique'));
+                        $this->removeNode($i);
+                        $this->removeNode($j--);
+                        $i -= 2;
+                    }
+                }
+            }
         }
     }
 

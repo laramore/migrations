@@ -50,4 +50,14 @@ abstract class AbstractCommand
 
         return $this->generateReverse();
     }
+
+    /**
+     * Return the properties for migration generation.
+     *
+     * @return array
+     */
+    public function getMigrationProperties(): array
+    {
+        return [];
+    }
 }

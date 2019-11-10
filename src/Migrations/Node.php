@@ -306,9 +306,9 @@ class Node extends AbstractNode
      *
      * @param  array   $nodes
      * @param  Command $command
-     * @return Command|null
+     * @return Command|array|null
      */
-    protected function getResultedCommand(array &$nodes, Command $command): ?Command
+    protected function getResultedCommand(array &$nodes, Command $command)
     {
         foreach ($nodes as $key => $node) {
             // If an identical command exists, check the differences.
@@ -324,9 +324,17 @@ class Node extends AbstractNode
 
                 // If they are differences in properties, try to generate a change command.
                 if ($count = (\count($newProperties) + \count($oldProperties))) {
+                    $commands = [];
+
+                    if (isset($oldProperties['unique']) && $oldProperties['unique']) {
+                        unset($oldProperties['unique']);
+
+                        $commands[] = new DropIndex($command->getTableName(), 'dropUnique', $command->getAttname(), new Index($command->getTableName(), 'unique', [$command->getAttname()]));
+                    }
+
                     // For some types, the difference needs to be calculated differently.
                     if ($count === 2 && !\count(\array_diff([$node->getType(), $commandType], ['datetime', 'timestamp']))) {
-                        return null;
+                        return $commands;
                     }
 
                     if (\in_array($commandType, ['enum', 'set'])) {
@@ -334,8 +342,12 @@ class Node extends AbstractNode
                         $newProperties['allowed'] = $commandProperties['allowed'];
                     }
 
-                    return new ChangeCommand($command->getTableName(), $commandType, $command->getAttname(),
-                        $newProperties, $oldProperties);
+                    if ($count = (\count($newProperties) + \count($oldProperties))) {
+                        $commands[] = new ChangeCommand($command->getTableName(), $commandType, $command->getAttname(),
+                            $newProperties, $oldProperties);
+                    }
+
+                    return $commands;
                 } else {
                     return null;
                 }
@@ -351,9 +363,9 @@ class Node extends AbstractNode
      *
      * @param  array      $nodes
      * @param  Constraint $constraint
-     * @return Constraint|null
+     * @return Constraint|array|null
      */
-    protected function getResultedConstraint(array &$nodes, Constraint $constraint): ?Constraint
+    protected function getResultedConstraint(array &$nodes, Constraint $constraint)
     {
         $command = $constraint->getCommand();
 

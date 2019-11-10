@@ -128,7 +128,7 @@ class Constraint extends AbstractCommand
      *
      * @return string
      */
-    public function getIndexName()
+    public function getIndexName(): string
     {
         return \str_replace(['-', '.'], '_', \strtolower($this->getTableName().'_'.$this->getAttname().'_'.$this->constraint));
     }

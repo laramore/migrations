@@ -116,17 +116,17 @@ class BlueprintNode extends MetaNode
         $type = $this->popFromColumn($column, 'type');
 
         // Here, if our field is an integer, we need to handle unsigned and increment integers.
-        if ($type === Types::integer()->migration) {
+        if ($type === Types::integer()->getMigrationType()) {
             if ($column->unsigned) {
                 unset($column->unsigned);
 
-                $type = Types::unsignedInteger()->migration;
+                $type = Types::unsignedInteger()->getMigrationType();
             }
 
             if ($column->autoIncrement) {
                 unset($column->autoIncrement);
 
-                $type = Types::increment()->migration;
+                $type = Types::increment()->getMigrationType();
             }
         }
 
@@ -187,8 +187,10 @@ class BlueprintNode extends MetaNode
                 $column = $this->popFromColumn($command, 'columns')[0];
 
                 return new DropCommand($this->getTableName(), $column);
-            } else {
+            } else if ($type === 'dropForeign') {
                 return new DropConstraint($this->getTableName(), $index);
+            } else {
+                return new DropIndex($this->getTableName(), $type, $index);
             }
         } else if ($type === 'foreign') {
             $needs = $this->getNeedsForCommand($command);

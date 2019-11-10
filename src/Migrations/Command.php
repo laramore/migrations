@@ -10,6 +10,8 @@
 
 namespace Laramore\Migrations;
 
+use Illuminate\Support\Str;
+
 class Command extends AbstractCommand
 {
     /**
@@ -94,7 +96,7 @@ class Command extends AbstractCommand
     public function getProperties(): array
     {
         return \array_merge([
-            $this->type => $this->attname,
+            Str::camel($this->type) => $this->attname,
         ], $this->properties);
     }
 

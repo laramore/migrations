@@ -40,7 +40,7 @@ class DropConstraint extends Constraint
      *
      * @return string
      */
-    public function getIndexName()
+    public function getIndexName(): string
     {
         return $this->getAttname();
     }
