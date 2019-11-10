@@ -8,17 +8,23 @@
  * @license MIT
  */
 
-namespace Laramore;
+namespace Laramore\Migrations;
 
-use Illuminate\Filesystem\Filesystem;
 use Illuminate\Database\Migrations\Migrator;
-use Laramore\Fields\Foreign;
+use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\{
+    Arr, Str
+};
+use Laramore\Exceptions\ConfigException;
+use Laramore\Fields\{
+    BaseField, Foreign
+};
 use Laramore\Interfaces\IsAPrimaryField;
 use Laramore\Migrations\{
     Command, Constraint, DatabaseNode, MetaNode, Node, Index, SchemaNode,
 };
-use Illuminate\Support\Str;
-use Types, Metas;
+use Laramore\Meta;
+use Metas, Rules, Types;
 
 class MigrationManager
 {
@@ -130,6 +136,44 @@ class MigrationManager
     }
 
     /**
+     * Return the main properties of a field.
+     *
+     * @return array
+     */
+    protected function getFieldProperties(BaseField $field): array
+    {
+        $keys = $field->getType()->getConfig('migration_properties');
+
+        if (\is_null($keys) || Arr::isAssoc($keys)) {
+            throw new ConfigException($field->getType()->getConfigPath('migration_properties'), 'any list of properties', $keys);
+        }
+
+        if (\method_exists($field, 'getMigrationProperties')) {
+            return \user_func_call([$field, 'getMigrationProperties'], $keys);
+        }
+
+        $properties = [];
+
+        foreach ($keys as $property) {
+            $nameKey = explode(':', $property);
+            $name = $nameKey[0];
+            $key = ($nameKey[1] ?? $name);
+
+            if (Rules::has($snakeKey = Str::snake($key))) {
+                if ($field->hasRule($snakeKey)) {
+                    $properties[$name] = true;
+                }
+            } else if (\method_exists($field, $method = 'get'.\ucfirst($key))) {
+                $properties[$name] = \call_user_func([$field, $method]);
+            } else if (!is_null($value = $field->getProperty($key, false))) {
+                $properties[$name] = $value;
+            }
+        }
+
+        return $properties;
+    }
+
+    /**
      * Generate sub nodes/commands/constraints from a meta.
      *
      * @param  Meta $meta
@@ -141,12 +185,14 @@ class MigrationManager
         $tableName = $meta->getTableName();
 
         // Generate a command for each field.
-        foreach ($meta->getFields() as $field) {
-            $nodes[] = new Command($tableName, $field->getType()->migration, $field->getAttname(), $field->getProperties());
-
-            if ($field instanceof IsAPrimaryField && $field->getType() !== Types::increment()) {
-                \end($nodes)->setProperty('primary', true);
+        foreach ($meta->all() as $field) {
+            $type = $field->getType()->getMigrationType();
+            if (\is_null($type)) {
+                continue;
             }
+
+            $properties = $this->getFieldProperties($field);
+            $nodes[] = new Command($tableName, $type, $field->getAttname(), $properties);
         }
 
         // Generate a constraint for each composite relations.

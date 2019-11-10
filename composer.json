@@ -34,8 +34,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Laramore\\Providers\\LaramoreMigrations",
-                "Laramore\\Providers\\MigrateCommands"
+                "Laramore\\Providers\\MigrationsProvider"
             ],
             "aliases": {
                 "Migrations": "Laramore\\Facades\\Migrations"
