@@ -14,7 +14,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Migrations\Migrator;
 use Laramore\Interfaces\IsALaramoreProvider;
-use Laramore\Traits\Providers\MergesConfig;
+use Laramore\Traits\Provider\MergesConfig;
 use Laramore\Commands\{
     MigrateClear, MigrateGenerate
 };
