@@ -17,8 +17,9 @@ use Illuminate\Support\{
 };
 use Laramore\Exceptions\ConfigException;
 use Laramore\Fields\{
-    BaseField, Foreign
+    BaseField, Field
 };
+use Laramore\Fields\Constraint\Foreign;
 use Laramore\Interfaces\IsAPrimaryField;
 use Laramore\Migrations\{
     Command, Constraint, DatabaseNode, MetaNode, Node, Index, SchemaNode,
@@ -192,48 +193,49 @@ class MigrationManager
             }
 
             $properties = $this->getFieldProperties($field);
-            $nodes[] = new Command($tableName, $type, $field->getAttname(), $properties);
-        }
+            $nodes[] = $command = new Command($tableName, $type, $field->getAttname(), $properties);
 
-        // Generate a constraint for each composite relations.
-        foreach ($meta->getComposites() as $composite) {
-            if ($composite instanceof Foreign) {
-                $needs = [
-                    [
-                        'table' => $toTableName = $composite->on::getMeta()->getTableName(),
-                        'field' => $composite->to,
-                    ],
-                    [
-                        'table' => $tableName,
-                        'field' => $attname = $composite->from,
-                    ],
-                ];
+            foreach ($field->getConstraints() as $constraint) {
+                if ($constraint->count() > 1) {
+                    continue;
+                }
 
-                $properties = [
-                    'references' => $composite->to,
-                    'on' => $toTableName
-                ];
+                if ($constraint->getConstraintName() === 'primary'
+                    && $constraint->all()[0]->getType()->getMigrationType() === 'increments') {
+                    continue;
+                }
 
-                $nodes[] = new Constraint($tableName, $attname, $needs, $properties);
+                $command->setProperty($constraint->getConstraintName(), $constraint->hasName() ? $constraint->getName() : true);
             }
         }
 
-        if (\is_array($primaries = $meta->getPrimary())) {
-            $nodes[] = new Index($tableName, 'primary', \array_map(function ($field) {
-                return $field->attname;
-            }, $primaries));
-        }
+        // Generate a constraint for each composite relations.
+        foreach ($meta->getConstraintHandler()->all() as $constraint) {
+            if ($constraint instanceof Foreign) {
+                $needs = \array_map(function (Field $field) {
+                    return [
+                        'table' => $field->getMeta()->getTableName(),
+                        'field' => $field->attname,
+                    ];
+                }, $constraint->all());
 
-        foreach ($meta->getUniques() as $unique) {
-            $nodes[] = new Index($tableName, 'unique', \array_map(function ($field) {
-                return $field->attname;
-            }, $unique));
-        }
+                $field = $constraint->getOnField();
 
-        foreach ($meta->getIndexes() as $index) {
-            $nodes[] = new Index($tableName, 'index', \array_map(function ($field) {
-                return $field->attname;
-            }, $index));
+                $properties = [
+                    'references' => $field->attname,
+                    'on' => $field->getMeta()->getTableName(),
+                ];
+
+                $nodes[] = new Constraint($tableName, $constraint->getOffField()->attname, $needs, $properties);
+            } else {
+                if ($constraint->count() === 1) {
+                    continue;
+                }
+
+                $nodes[] = new Index($tableName, $constraint->getConstraintName(), \array_map(function ($field) {
+                    return $field->attname;
+                }, $constraint->all()));
+            }
         }
 
         return $nodes;

@@ -14,12 +14,12 @@ return [
     'configurations' => [
         'boolean' => [
             'migration_properties' => [
-                'nullable', 'default', 'primary', 'index', 'unique',
+                'nullable', 'default',
             ],
         ],
         'char' => [
             'migration_properties' => [
-                'length:maxLength', 'nullable', 'default', 'primary', 'index', 'unique',
+                'length:maxLength', 'nullable', 'default',
             ],
         ],
         'composite' => [
@@ -28,12 +28,12 @@ return [
         'email' => [
             'migration_type' => 'char',
             'migration_properties' => [
-                'length:maxLength', 'nullable', 'default', 'primary', 'index', 'unique',
+                'length:maxLength', 'nullable', 'default',
             ],
         ],
         'enum' => [
             'migration_properties' => [
-                'allowed:elementsValue', 'length:maxLength', 'nullable', 'default:defaultValue', 'primary', 'index', 'unique',
+                'allowed:elementsValue', 'length:maxLength', 'nullable', 'default:defaultValue',
             ],
         ],
         'increment' => [
@@ -44,12 +44,12 @@ return [
         ],
         'integer' => [
             'migration_properties' => [
-                'nullable', 'default', 'primary', 'index', 'unique',
+                'nullable', 'default',
             ],
         ],
         'unsigned_integer' => [
             'migration_properties' => [
-                'nullable', 'default', 'primary', 'index', 'unique',
+                'nullable', 'default',
             ],
         ],
         'link' => [
@@ -58,7 +58,7 @@ return [
         'password' => [
             'migration_type' => 'char',
             'migration_properties' => [
-                'length:maxLength', 'nullable', 'default', 'primary', 'index', 'unique',
+                'length:maxLength', 'nullable', 'default',
             ],
         ],
         'primary_id' => [
@@ -68,19 +68,19 @@ return [
         'pattern' => [
             'migration_type' => 'char',
             'migration_properties' => [
-                'length:maxLength', 'nullable', 'default', 'primary', 'index', 'unique',
+                'length:maxLength', 'nullable', 'default',
             ],
         ],
         'text' => [
             'migration_type' => 'text',
             'migration_properties' => [
-                'nullable', 'default', 'primary', 'index', 'unique',
+                'nullable', 'default',
             ],
         ],
         'timestamp' => [
             'migration_type' => 'timestamp',
             'migration_properties' => [
-                'nullable', 'default', 'useCurrent', 'primary', 'index', 'unique',
+                'nullable', 'default', 'useCurrent',
             ],
         ],
     ],
