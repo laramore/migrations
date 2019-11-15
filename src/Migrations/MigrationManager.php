@@ -20,15 +20,20 @@ use Laramore\Fields\{
     BaseField, Field
 };
 use Laramore\Fields\Constraint\Foreign;
-use Laramore\Interfaces\IsAPrimaryField;
+use Laramore\Interfaces\{
+    IsAPrimaryField, IsALaramoreManager
+};
 use Laramore\Migrations\{
     Command, Constraint, DatabaseNode, MetaNode, Node, Index, SchemaNode,
 };
+use Laramore\Traits\IsLocked;
 use Laramore\Meta;
 use Metas, Rules, Types;
 
-class MigrationManager
+class MigrationManager implements IsALaramoreManager
 {
+    use IsLocked;
+
     /**
      * Path were all migration files are stored.
      *
@@ -467,5 +472,10 @@ class MigrationManager
         }
 
         return $generatedFiles;
+    }
+
+    protected function locking()
+    {
+
     }
 }
