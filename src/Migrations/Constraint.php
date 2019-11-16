@@ -88,6 +88,16 @@ class Constraint extends AbstractCommand
     }
 
     /**
+     * Return the properties for migration generation.
+     *
+     * @return array
+     */
+    public function getMigrationProperties(): array
+    {
+        return $this->getCommand()->getMigrationProperties();
+    }
+
+    /**
      * Return all requirements for this constraint.
      *
      * @return array

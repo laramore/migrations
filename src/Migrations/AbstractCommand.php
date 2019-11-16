@@ -56,8 +56,5 @@ abstract class AbstractCommand
      *
      * @return array
      */
-    public function getMigrationProperties(): array
-    {
-        return [];
-    }
+    abstract public function getMigrationProperties(): array;
 }
