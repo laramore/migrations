@@ -2,7 +2,7 @@
 /**
  * Generated with Laramore on {{ $date }}.
  *
- * @var Illuminate\Database\Migrations\Migration
+ * @var   Illuminate\Database\Migrations\Migration
 @if (isset($model))
  * @model {{ $model }}
 @endif

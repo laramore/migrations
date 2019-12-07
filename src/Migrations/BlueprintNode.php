@@ -16,11 +16,14 @@ use Illuminate\Support\{
 use Illuminate\Database\Schema\{
     Blueprint, ColumnDefinition
 };
-use Laramore\Database\Schema\Builder;
-use Metas, Types;
+use Laramore\Facades\{
+    Metas, Types
+};
 
 class BlueprintNode extends MetaNode
 {
+    protected $type = 'update';
+
     /**
      * Create a node based on a blueprint definition.
      *
@@ -28,34 +31,16 @@ class BlueprintNode extends MetaNode
      */
     public function __construct(Blueprint $blueprint)
     {
-        $commands = \array_filter($blueprint->getCommands(), function (Fluent $command) {
-            return $command->name !== 'create';
-        });
-        $nodes = \array_merge($blueprint->getColumns(), $commands);
-
-        $this->type = (\count($commands) === \count($blueprint->getCommands()) ? 'update' : 'create');
         $this->tableNames = [$blueprint->getTable()];
 
-        $this->setNodes($nodes);
-    }
+        $constraints = \array_map([$this, 'commandToConstraint'], \array_filter($blueprint->getCommands(), function (Fluent $command) {
+            return $command->name !== 'create';
+        }));
+        $commands = \array_map([$this, 'columnToCommand'], $blueprint->getColumns());
 
-    /**
-     * Define the sub nodes/commands.
-     *
-     * @param array $nodes
-     * @return void
-     */
-    protected function setNodes(array $nodes)
-    {
-        $this->nodes = \array_map(function ($node) {
-            if ($node instanceof ColumnDefinition) {
-                return $this->columnToCommand($node);
-            } else if ($node instanceof Fluent) {
-                return $this->commandToConstraint($node);
-            }
-        }, $nodes);
+        $this->setNodes(\array_merge($commands, $constraints));
     }
-
+    
     /**
      * This method is called when the node is asked to be optimized.
      * Only optimize if a meta exists for this table.
@@ -108,25 +93,25 @@ class BlueprintNode extends MetaNode
     /**
      * Pop the type definition from a column definition.
      *
-     * @param  ColumnDefinition $column
+     * @param  ColumnDefinition|Fluent $column
      * @return string
      */
-    protected function popTypeFromColumn(ColumnDefinition $column): string
+    protected function popTypeFromColumn(Fluent $column): string
     {
         $type = $this->popFromColumn($column, 'type');
 
         // Here, if our field is an integer, we need to handle unsigned and increment integers.
-        if ($type === Types::integer()->getMigrationType()) {
+        if ($type === Types::get('integer')->getMigrationType()) {
             if ($column->unsigned) {
                 unset($column->unsigned);
 
-                $type = Types::unsignedInteger()->getMigrationType();
+                $type = Types::get('unsigned_integer')->getMigrationType();
             }
 
             if ($column->autoIncrement) {
                 unset($column->autoIncrement);
 
-                $type = Types::increment()->getMigrationType();
+                $type = Types::get('increment')->getMigrationType();
             }
         }
 
@@ -156,10 +141,10 @@ class BlueprintNode extends MetaNode
     /**
      * Transform a column definition to a migration command.
      *
-     * @param  ColumnDefinition $column
+     * @param  ColumnDefinition|Fluent $column
      * @return Command
      */
-    public function columnToCommand(ColumnDefinition $column): Command
+    public function columnToCommand(Fluent $column): Command
     {
         $this->cleanUnrelevantAttributes($column);
 

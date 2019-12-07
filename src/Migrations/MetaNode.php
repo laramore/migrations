@@ -11,7 +11,9 @@
 namespace Laramore\Migrations;
 
 use Laramore\Meta;
-use Metas, Migrations;
+use Laramore\Facades\{
+    Metas, Migrations
+};
 
 class MetaNode extends AbstractNode
 {
