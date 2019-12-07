@@ -148,11 +148,7 @@ class MigrationManager implements IsALaramoreManager
      */
     protected function getFieldProperties(BaseField $field): array
     {
-        $keys = $field->getType()->getConfig('migration_properties');
-
-        if (\is_null($keys) || Arr::isAssoc($keys)) {
-            throw new ConfigException($field->getType()->getConfigPath('migration_properties'), 'any list of properties', $keys);
-        }
+        $keys = $field->getType()->get('migration_properties');
 
         if (\method_exists($field, 'getMigrationProperties')) {
             return \user_func_call([$field, 'getMigrationProperties'], $keys);

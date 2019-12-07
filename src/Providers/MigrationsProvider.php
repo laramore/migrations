@@ -57,6 +57,7 @@ class MigrationsProvider extends ServiceProvider implements IsALaramoreProvider
         });
 
         $this->app->booting([$this, 'bootingCallback']);
+        $this->app->booted([$this, 'bootedCallback']);
     }
 
     /**
