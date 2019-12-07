@@ -12,23 +12,20 @@ namespace Laramore\Migrations;
 
 use Illuminate\Database\Migrations\Migrator;
 use Illuminate\Filesystem\Filesystem;
-use Illuminate\Support\{
-    Arr, Str
-};
-use Laramore\Exceptions\ConfigException;
+use Illuminate\Support\Str;
 use Laramore\Fields\{
     BaseField, Field
 };
 use Laramore\Fields\Constraint\Foreign;
-use Laramore\Interfaces\{
-    IsAPrimaryField, IsALaramoreManager
-};
+use Laramore\Interfaces\IsALaramoreManager;
 use Laramore\Migrations\{
-    Command, Constraint, DatabaseNode, MetaNode, Node, Index, SchemaNode,
+    Command, Constraint, MetaNode, Node, Index, SchemaNode,
 };
 use Laramore\Traits\IsLocked;
 use Laramore\Meta;
-use Metas, Rules, Types;
+use Laramore\Facades\{
+    Metas, Rules
+};
 
 class MigrationManager implements IsALaramoreManager
 {
@@ -148,10 +145,14 @@ class MigrationManager implements IsALaramoreManager
      */
     protected function getFieldProperties(BaseField $field): array
     {
-        $keys = $field->getType()->get('migration_properties');
+        if (\method_exists($field, 'getMigrationPropertyKeys')) {
+            $keys = \call_user_func([$field, 'getMigrationPropertyKeys']);
+        } else {
+            $keys = $field->getType()->getMigrationPropertyKeys();
+        }
 
         if (\method_exists($field, 'getMigrationProperties')) {
-            return \user_func_call([$field, 'getMigrationProperties'], $keys);
+            return \call_user_func([$field, 'getMigrationProperties'], $keys);
         }
 
         $properties = [];
@@ -352,43 +353,6 @@ class MigrationManager implements IsALaramoreManager
     }
 
     /**
-     * Return all fields for each nodes
-     *
-     * @param  array $nodes
-     * @return array
-     */
-    protected function getFieldsFromNodes(array $nodes): array
-    {
-        $table = [];
-
-        foreach ($nodes as $tableName => $node) {
-            $table[$tableName] = $this->getFieldsFromNode($node);
-        }
-
-        return $table;
-    }
-
-    /**
-     * Return all wanted fields.
-     *
-     * @return array
-     */
-    public function getDefinedFields()
-    {
-        return $this->getFieldsFromNodes($this->getWantedNode());
-    }
-
-    /**
-     * Return all actual fields.
-     *
-     * @return array
-     */
-    public function getDatabaseFields()
-    {
-        return $this->getFieldsFromNodes($this->getActualNode());
-    }
-
-    /**
      * Generate a migration file based on data given.
      *
      * @param  string $viewName
@@ -443,7 +407,7 @@ class MigrationManager implements IsALaramoreManager
      */
     public function clearMigrations()
     {
-        $fs = new Filesystem;
+        $fs = new Filesystem();
         $regex = "#$this->path/?(.*)\.php#";
 
         return \array_map(function ($filePath) use ($fs, $regex) {
@@ -462,7 +426,7 @@ class MigrationManager implements IsALaramoreManager
     public function generateMigrations()
     {
         $generatedFiles = [];
-
+        
         foreach ($this->getMissingNode()->getNodes() as $node) {
             $generatedFiles[] = $this->generateMigration($node);
         }
