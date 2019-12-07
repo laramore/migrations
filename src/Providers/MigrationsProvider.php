@@ -80,7 +80,7 @@ class MigrationsProvider extends ServiceProvider implements IsALaramoreProvider
      */
     protected function loadViews()
     {
-        $viewPath = __DIR__.'/../../views';
+        $viewPath = __DIR__.'/../../resources/views';
         $this->loadViewsFrom($viewPath, 'laramore');
 
         $this->publishes([
