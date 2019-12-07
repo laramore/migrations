@@ -31,7 +31,7 @@ class Constraint extends AbstractCommand
     /**
      * Command to run when this constraint is satisfied.
      *
-     * @var AbstractCommand
+     * @var Command
      */
     protected $command;
 
@@ -74,13 +74,13 @@ class Constraint extends AbstractCommand
      */
     public function getAttname()
     {
-        return $this->command->getAttname();
+        return $this->getCommand()->getAttname();
     }
 
     /**
      * Return the associated command.
      *
-     * @return AbstractCommand
+     * @return Command
      */
     public function getCommand()
     {
