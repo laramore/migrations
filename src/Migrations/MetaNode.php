@@ -257,7 +257,7 @@ class MetaNode extends AbstractNode
     protected function optimizing()
     {
         if ($this->type !== 'delete') {
-            $fields = $this->getMeta()->getFields();
+            $fields = $this->getMeta()->getAttributes();
             $nbrOfNodes = \count($this->getNodes());
             $unorderedNodes = $this->nodes;
             $this->nodes = [];

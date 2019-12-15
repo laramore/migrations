@@ -14,7 +14,7 @@ use Illuminate\Database\Migrations\Migrator;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
 use Laramore\Fields\{
-    BaseField, Field
+    BaseField, AttributeField
 };
 use Laramore\Fields\Constraint\Foreign;
 use Laramore\Interfaces\IsALaramoreManager;
@@ -188,7 +188,7 @@ class MigrationManager implements IsALaramoreManager
         $tableName = $meta->getTableName();
 
         // Generate a command for each field.
-        foreach ($meta->all() as $field) {
+        foreach ($meta->getFields() as $field) {
             $type = $field->getType()->getMigrationType();
             if (\is_null($type)) {
                 continue;
@@ -214,7 +214,7 @@ class MigrationManager implements IsALaramoreManager
         // Generate a constraint for each composite relations.
         foreach ($meta->getConstraintHandler()->all() as $constraint) {
             if ($constraint instanceof Foreign) {
-                $needs = \array_map(function (Field $field) {
+                $needs = \array_map(function (AttributeField $field) {
                     return [
                         'table' => $field->getMeta()->getTableName(),
                         'field' => $field->attname,
@@ -362,10 +362,7 @@ class MigrationManager implements IsALaramoreManager
      */
     protected function generateMigrationFile(string $viewName, array $data, string $path)
     {
-        \file_put_contents($path, view($viewName, \array_merge([
-            'php' => '<?php',
-            'blueprintVar' => '$table',
-        ], $data))->render());
+        \file_put_contents($path, view($viewName, $data)->render());
     }
 
     /**
