@@ -24,7 +24,7 @@ use Laramore\Migrations\{
 use Laramore\Traits\IsLocked;
 use Laramore\Meta;
 use Laramore\Facades\{
-    Meta as MetaManager, Rule
+    Meta as MetaManager, Option
 };
 
 class MigrationManager implements IsALaramoreManager
@@ -163,8 +163,8 @@ class MigrationManager implements IsALaramoreManager
             $name = $nameKey[0];
             $key = ($nameKey[1] ?? $name);
 
-            if (Rule::has($snakeKey = Str::snake($key))) {
-                if ($field->hasRule($snakeKey)) {
+            if (Option::has($snakeKey = Str::snake($key))) {
+                if ($field->hasOption($snakeKey)) {
                     $properties[$name] = true;
                 }
             } else if (\method_exists($field, $method = 'get'.\ucfirst($key))) {
