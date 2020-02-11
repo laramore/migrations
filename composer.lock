@@ -942,7 +942,7 @@
                         "Laramore\\Providers\\MetasProvider"
                     ],
                     "aliases": {
-                        "Metas": "Laramore\\Facades\\Metas"
+                        "Meta": "Laramore\\Facades\\Meta"
                     }
                 }
             },
@@ -1010,14 +1010,14 @@
             "extra": {
                 "laravel": {
                     "providers": [
-                        "Laramore\\Providers\\RulesProvider",
-                        "Laramore\\Providers\\TypesProvider",
-                        "Laramore\\Providers\\OperatorsProvider"
+                        "Laramore\\Providers\\RuleProvider",
+                        "Laramore\\Providers\\TypeProvider",
+                        "Laramore\\Providers\\OperatorProvider"
                     ],
                     "aliases": {
-                        "Rules": "Laramore\\Facades\\Rules",
-                        "Types": "Laramore\\Facades\\Types",
-                        "Operators": "Laramore\\Facades\\Operators",
+                        "Rule": "Laramore\\Facades\\Rule",
+                        "Type": "Laramore\\Facades\\Type",
+                        "Operator": "Laramore\\Facades\\Operator",
                         "Op": "Laramore\\Facades\\Operators"
                     }
                 }
