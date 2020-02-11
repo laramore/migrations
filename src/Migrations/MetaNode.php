@@ -194,10 +194,10 @@ class MetaNode extends AbstractNode
             return $fieldCommand->getReverse();
         }, $this->getFieldNodes());
         $constraintCommands = \array_map(function ($constraint) {
-                return $constraint->getCommand()->getReverse();
+                return $constraint->getReverse();
         }, $this->getConstraintNodes());
         $indexCommands = \array_map(function ($index) {
-                return $index->getCommand()->getReverse();
+                return $index->getReverse();
         }, $this->getIndexNodes());
 
         $commands = [
@@ -297,7 +297,6 @@ class MetaNode extends AbstractNode
     {
         if ($this->type !== 'delete') {
             $fields = $this->getMeta()->getAttributes();
-            $nbrOfNodes = \count($this->getNodes());
             $unorderedNodes = $this->nodes;
             $this->nodes = [];
 
