@@ -126,7 +126,7 @@ class Node extends AbstractNode
                     $tableNames2 = $this->getMetaConstraintTables($node2);
 
                     if ($jToAvoid[$i] === $j) {
-                        $jToAvoid = null;
+                        $jToAvoid[$i] = null;
                         continue;
                     }
 
@@ -329,7 +329,8 @@ class Node extends AbstractNode
                     if (isset($oldProperties['unique']) && $oldProperties['unique']) {
                         unset($oldProperties['unique']);
 
-                        $commands[] = new DropIndex($command->getTableName(), 'dropUnique', $command->getAttname(), new Index($command->getTableName(), 'unique', [$command->getAttname()]));
+                        $index = new Index($command->getTableName(), 'unique', [$command->getAttname()]);
+                        $commands[] = new DropIndex($command->getTableName(), 'dropUnique', $command->getAttname(), $index);
                     }
 
                     // For some types, the difference needs to be calculated differently.

@@ -10,7 +10,7 @@
 
 namespace Laramore\Migrations;
 
-use Metas, Migrations;
+use Meta, Migrations;
 
 abstract class AbstractNode
 {
@@ -291,7 +291,7 @@ abstract class AbstractNode
                     $lastIndex = $i;
                     $subNodes = \array_slice($this->nodes, $firstIndex, ($lastIndex - $firstIndex));
 
-                    if (!Metas::hasForTableName($commonTable)) {
+                    if (!Meta::hasForTableName($commonTable)) {
                         $metaType = 'delete';
                     } else if (in_array($commonTable, $passedTables)) {
                         $metaType = 'update';
@@ -317,7 +317,7 @@ abstract class AbstractNode
         if (!\is_null($firstIndex)) {
             $subNodes = \array_slice($this->nodes, $firstIndex, (\count($this->getNodes()) - $firstIndex));
 
-            if (!Metas::hasForTableName($commonTable)) {
+            if (!Meta::hasForTableName($commonTable)) {
                 $metaType = 'delete';
             } else if (\in_array($commonTable, $passedTables)) {
                 $metaType = 'update';

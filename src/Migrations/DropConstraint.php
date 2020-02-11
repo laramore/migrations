@@ -10,8 +10,17 @@
 
 namespace Laramore\Migrations;
 
-class DropConstraint extends Constraint
+use Laramore\Interfaces\Migration\IsADropCommand;
+
+class DropConstraint extends Constraint implements IsADropCommand
 {
+    /**
+     * Class to generate a valid command.
+     *
+     * @var string
+     */
+    protected $commandClass = DropCommand::class;
+
     /**
      * Type of the constraint.
      *

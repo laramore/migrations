@@ -1,1 +1,1 @@
-Schema::{{ $command }}({!! json_encode($table) !!});
+Schema::{{ $line }}({!! json_encode($table) !!});

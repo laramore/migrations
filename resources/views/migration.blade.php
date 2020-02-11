@@ -1,5 +1,4 @@
-<?php $php = '<?php'; $blueprintVar = '$table'; ?> 
-{!! $php !!}
+{!! '<', '?php' !!}
 /**
  * Generated with Laramore on {{ $date }}.
  *
@@ -15,31 +14,23 @@ use Illuminate\Database\Migrations\Migration;
 
 class {{ $name }} extends Migration
 {
-    /**
-     * Run the migrations.
-     *
-     * @return void
-     */
-    public function up()
-    {
-@if ($type === 'delete')
-        @include('laramore::migration.line', $up)
-@else
-        @include('laramore::migration.block', $up)
-@endif
-    }
+	/**
+	 * Run the migrations.
+	 *
+	 * @return void
+	 */
+	public function up()
+	{
+		@if (isset($up['line']))@include('laramore::migration.line', $up)@elseif (isset($up['blocks']))@include('laramore::migration.block', $up)@endif
+	}
 
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
-    public function down()
-    {
-@if ($type === 'create')
-        @include('laramore::migration.line', $down)
-@else
-        @include('laramore::migration.block', $down)
-@endif
-    }
+	/**
+	 * Reverse the migrations.
+	 *
+	 * @return void
+	 */
+	public function down()
+	{
+		@if (isset($down['line']))@include('laramore::migration.line', $down)@elseif (isset($down['blocks']))@include('laramore::migration.block', $down)@endif
+	}
 }

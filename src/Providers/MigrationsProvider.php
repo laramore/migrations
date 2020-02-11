@@ -11,7 +11,6 @@
 namespace Laramore\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Migrations\Migrator;
 use Laramore\Interfaces\{
     IsALaramoreManager, IsALaramoreProvider
@@ -21,7 +20,7 @@ use Laramore\Commands\{
     MigrateClear, MigrateGenerate
 };
 use Laramore\Migrations\MigrationManager;
-use Migrations, Types;
+use Migrations, Type;
 
 class MigrationsProvider extends ServiceProvider implements IsALaramoreProvider
 {
@@ -35,13 +34,6 @@ class MigrationsProvider extends ServiceProvider implements IsALaramoreProvider
     protected static $migrator;
 
     /**
-     * Migration manager.
-     *
-     * @var array
-     */
-    protected static $managers;
-
-    /**
      * Before booting, create our definition for migrations.
      *
      * @return void
@@ -49,11 +41,11 @@ class MigrationsProvider extends ServiceProvider implements IsALaramoreProvider
     public function register()
     {
         $this->mergeConfigFrom(
-            __DIR__.'/../../config/types.php', 'types',
+            __DIR__.'/../../config/type.php', 'type',
         );
 
         $this->app->singleton('Migrations', function() {
-            return static::getManager();
+            return static::generateManager();
         });
 
         $this->app->booting([$this, 'bootingCallback']);
@@ -116,28 +108,11 @@ class MigrationsProvider extends ServiceProvider implements IsALaramoreProvider
     /**
      * Generate the corresponded manager.
      *
-     * @param  string $key
      * @return IsALaramoreManager
      */
-    public static function generateManager(string $key): IsALaramoreManager
+    public static function generateManager(): IsALaramoreManager
     {
-        return static::$managers[$key] = new MigrationManager(static::getDefaults());
-    }
-
-    /**
-     * Return the generated manager for this provider.
-     *
-     * @return IsALaramoreManager
-     */
-    public static function getManager(): IsALaramoreManager
-    {
-        $appHash = \spl_object_hash(app());
-
-        if (!isset(static::$managers[$appHash])) {
-            return static::generateManager($appHash);
-        }
-
-        return static::$managers[$appHash];
+        return new MigrationManager(static::getDefaults());
     }
 
     /**
@@ -148,8 +123,8 @@ class MigrationsProvider extends ServiceProvider implements IsALaramoreProvider
      */
     public function bootingCallback()
     {
-        Types::define('migration_type');
-        Types::define('migration_properties', []);
+        Type::define('migration_type');
+        Type::define('migration_properties', []);
     }
 
     /**
@@ -159,6 +134,6 @@ class MigrationsProvider extends ServiceProvider implements IsALaramoreProvider
      */
     public function bootedCallback()
     {
-        static::getManager()->lock();
+        Migrations::lock();
     }
 }

@@ -1,4 +1,4 @@
-{{ $blueprintVar }}@foreach ($command->getMigrationProperties() as $method => $args)->{{ $method }}({!!
+{{ '$table' }}@foreach ($command->getMigrationProperties() as $method => $args)->{{ $method }}({!!
 	($args === [true] && $method !== 'default') ?
 		'' :
 		\implode(', ', \array_map(function ($arg) {

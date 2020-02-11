@@ -10,8 +10,6 @@
 
 namespace Laramore\Migrations;
 
-use Laramore\Meta;
-
 class Index extends Constraint
 {
     /**

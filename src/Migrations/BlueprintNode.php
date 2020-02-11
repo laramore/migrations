@@ -17,7 +17,7 @@ use Illuminate\Database\Schema\{
     Blueprint, ColumnDefinition
 };
 use Laramore\Facades\{
-    Metas, Types
+    Meta, Type
 };
 
 class BlueprintNode extends MetaNode
@@ -33,14 +33,15 @@ class BlueprintNode extends MetaNode
     {
         $this->tableNames = [$blueprint->getTable()];
 
-        $constraints = \array_map([$this, 'commandToConstraint'], \array_filter($blueprint->getCommands(), function (Fluent $command) {
+        $filtered = \array_filter($blueprint->getCommands(), function (Fluent $command) {
             return $command->name !== 'create';
-        }));
+        });
+        $constraints = \array_map([$this, 'commandToConstraint'], $filtered);
         $commands = \array_map([$this, 'columnToCommand'], $blueprint->getColumns());
 
         $this->setNodes(\array_merge($commands, $constraints));
     }
-    
+
     /**
      * This method is called when the node is asked to be optimized.
      * Only optimize if a meta exists for this table.
@@ -49,7 +50,7 @@ class BlueprintNode extends MetaNode
      */
     protected function optimizing()
     {
-        if (Metas::hasForTableName($this->getTableName())) {
+        if (Meta::hasForTableName($this->getTableName())) {
             parent::optimizing();
         } else {
             $this->unpack();
@@ -101,17 +102,17 @@ class BlueprintNode extends MetaNode
         $type = $this->popFromColumn($column, 'type');
 
         // Here, if our field is an integer, we need to handle unsigned and increment integers.
-        if ($type === Types::get('integer')->getMigrationType()) {
+        if ($type === Type::get('integer')->getMigrationType()) {
             if ($column->unsigned) {
                 unset($column->unsigned);
 
-                $type = Types::get('unsigned_integer')->getMigrationType();
+                $type = Type::get('unsigned_integer')->getMigrationType();
             }
 
             if ($column->autoIncrement) {
                 unset($column->autoIncrement);
 
-                $type = Types::get('increment')->getMigrationType();
+                $type = Type::get('increment')->getMigrationType();
             }
         }
 
@@ -171,7 +172,7 @@ class BlueprintNode extends MetaNode
             if ($type === 'dropColumn') {
                 $column = $this->popFromColumn($command, 'columns')[0];
 
-                return new DropCommand($this->getTableName(), $column);
+                return new DropCommand($this->getTableName(), $type, $column);
             } else if ($type === 'dropForeign') {
                 return new DropConstraint($this->getTableName(), $index);
             } else {

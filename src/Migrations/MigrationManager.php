@@ -19,12 +19,12 @@ use Laramore\Fields\{
 use Laramore\Fields\Constraint\Foreign;
 use Laramore\Interfaces\IsALaramoreManager;
 use Laramore\Migrations\{
-    Command, Constraint, MetaNode, Node, Index, SchemaNode,
+    Command, Constraint, MetaNode, Node, Index, SchemaNode
 };
 use Laramore\Traits\IsLocked;
 use Laramore\Meta;
 use Laramore\Facades\{
-    Metas, Rules
+    Meta as MetaManager, Rule
 };
 
 class MigrationManager implements IsALaramoreManager
@@ -141,6 +141,7 @@ class MigrationManager implements IsALaramoreManager
     /**
      * Return the main properties of a field.
      *
+     * @param BaseField $field
      * @return array
      */
     protected function getFieldProperties(BaseField $field): array
@@ -162,7 +163,7 @@ class MigrationManager implements IsALaramoreManager
             $name = $nameKey[0];
             $key = ($nameKey[1] ?? $name);
 
-            if (Rules::has($snakeKey = Str::snake($key))) {
+            if (Rule::has($snakeKey = Str::snake($key))) {
                 if ($field->hasRule($snakeKey)) {
                     $properties[$name] = true;
                 }
@@ -262,7 +263,7 @@ class MigrationManager implements IsALaramoreManager
     {
         $wantedNode = [];
 
-        foreach (Metas::all() as $meta) {
+        foreach (MetaManager::all() as $meta) {
             $nodes = $this->getNodesFromMeta($meta);
 
             if (\count($nodes)) {
@@ -379,7 +380,6 @@ class MigrationManager implements IsALaramoreManager
 
         $data = [
             'date' => now(),
-            'type' => $type,
             'table' => $table = $metaNode->getTableName(),
             'up' => $metaNode->getUp(),
             'down' => $metaNode->getDown(),
@@ -423,7 +423,7 @@ class MigrationManager implements IsALaramoreManager
     public function generateMigrations()
     {
         $generatedFiles = [];
-        
+
         foreach ($this->getMissingNode()->getNodes() as $node) {
             $generatedFiles[] = $this->generateMigration($node);
         }
@@ -431,6 +431,11 @@ class MigrationManager implements IsALaramoreManager
         return $generatedFiles;
     }
 
+    /**
+     * No actions during locking.
+     *
+     * @return void
+     */
     protected function locking()
     {
 

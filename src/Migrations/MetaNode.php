@@ -12,8 +12,9 @@ namespace Laramore\Migrations;
 
 use Laramore\Meta;
 use Laramore\Facades\{
-    Metas, Migrations
+    Meta as MetaManager, Migrations
 };
+use Laramore\Interfaces\Migration\IsADropCommand;
 
 class MetaNode extends AbstractNode
 {
@@ -135,63 +136,101 @@ class MetaNode extends AbstractNode
     }
 
     /**
-     * Return all constraints command.
+     * Return all commands by block.
      *
      * @return array
      */
-    public function getConstraintCommands(): array
+    public function getCommands(): array
     {
-        return \array_map(function ($constraint) {
+        $fieldCommands = $this->getFieldNodes();
+        $constraintCommands = \array_map(function ($constraint) {
             return $constraint->getCommand();
         }, $this->getConstraintNodes());
-    }
-
-    /**
-     * Return all indexes command.
-     *
-     * @return array
-     */
-    public function getIndexCommands(): array
-    {
-        return \array_map(function ($index) {
+        $indexCommands = \array_map(function ($index) {
             return $index->getCommand();
         }, $this->getIndexNodes());
+
+        $commands = [
+            'drop_indexes' => [],
+            'drop_constraints' => [],
+            'drop_fields' => [],
+            'fields' => [],
+            'constraints' => [],
+            'indexes' => [],
+        ];
+
+        foreach ($fieldCommands as $command) {
+            $commands[($command instanceof IsADropCommand ? 'drop_fields' : 'fields')][] = $command;
+        }
+
+        foreach ($constraintCommands as $command) {
+            $commands[($command instanceof IsADropCommand ? 'drop_constraints' : 'constraints')][] = $command;
+        }
+
+        foreach ($indexCommands as $command) {
+            $commands[($command instanceof IsADropCommand ? 'drop_indexes' : 'indexes')][] = $command;
+        }
+
+        // Avoid duplications and empty values.
+        foreach ($commands as $key => $value) {
+            if (\count($value) > 0) {
+                $commands[$key] = \array_filter($value);
+            } else {
+                unset($commands[$key]);
+            }
+        }
+
+        return $commands;
     }
 
     /**
-     * Return all reversed commands.
+     * Return all reversed commands by block.
      *
      * @return array
      */
-    public function getFieldReverseCommands(): array
+    public function getReverseCommands(): array
     {
-        return \array_filter(\array_map(function ($constraint) {
-            return $constraint->getReverse();
-        }, $this->getFieldNodes()));
-    }
+        $fieldCommands = \array_map(function ($fieldCommand) {
+            return $fieldCommand->getReverse();
+        }, $this->getFieldNodes());
+        $constraintCommands = \array_map(function ($constraint) {
+                return $constraint->getCommand()->getReverse();
+        }, $this->getConstraintNodes());
+        $indexCommands = \array_map(function ($index) {
+                return $index->getCommand()->getReverse();
+        }, $this->getIndexNodes());
 
-    /**
-     * Return all reversed constraints.
-     *
-     * @return array
-     */
-    public function getConstraintReverseCommands(): array
-    {
-        return \array_filter(\array_map(function ($constraint) {
-            return $constraint->getReverse();
-        }, $this->getConstraintNodes()));
-    }
+        $commands = [
+            'drop_indexes' => [],
+            'drop_constraints' => [],
+            'drop_fields' => [],
+            'fields' => [],
+            'constraints' => [],
+            'indexes' => [],
+        ];
 
-    /**
-     * Return all reversed indexes.
-     *
-     * @return array
-     */
-    public function getIndexReverseCommands(): array
-    {
-        return \array_filter(\array_map(function ($index) {
-            return $index->getReverse();
-        }, $this->getIndexNodes()));
+        foreach ($fieldCommands as $command) {
+            $commands[($command instanceof IsADropCommand ? 'drop_fields' : 'fields')][] = $command;
+        }
+
+        foreach ($constraintCommands as $command) {
+            $commands[($command instanceof IsADropCommand ? 'drop_constraints' : 'constraints')][] = $command;
+        }
+
+        foreach ($indexCommands as $command) {
+            $commands[($command instanceof IsADropCommand ? 'drop_indexes' : 'indexes')][] = $command;
+        }
+
+        // Avoid duplications and empty values.
+        foreach ($commands as $key => $value) {
+            if (\count($value) > 0) {
+                $commands[$key] = \array_filter($value);
+            } else {
+                unset($commands[$key]);
+            }
+        }
+
+        return $commands;
     }
 
     /**
@@ -201,7 +240,7 @@ class MetaNode extends AbstractNode
      */
     public function getMeta(): Meta
     {
-        return Metas::getForTableName($this->getTableName());
+        return MetaManager::getForTableName($this->getTableName());
     }
 
     /**
@@ -286,28 +325,19 @@ class MetaNode extends AbstractNode
      */
     public function getUp(): array
     {
-        switch ($this->getType()) {
-            case 'create':
-                return [
-                    'type' => 'create',
-                    'fields' => $this->getFieldNodes(),
-                    'constraints' => $this->getConstraintCommands(),
-                    'indexes' => $this->getIndexCommands(),
-                ];
-
+        switch ($type = $this->getType()) {
             case 'delete':
                 return [
                     'type' => 'delete',
-                    'command' => 'dropIfExists',
+                    'line' => 'dropIfExists',
                 ];
 
+            case 'create':
             case 'update':
             default:
                 return [
-                    'type' => 'update',
-                    'fields' => $this->getFieldNodes(),
-                    'constraints' => $this->getConstraintCommands(),
-                    'indexes' => $this->getIndexCommands(),
+                    'type' => $type,
+                    'blocks' => $this->getCommands(),
                 ];
         }
     }
@@ -319,11 +349,11 @@ class MetaNode extends AbstractNode
      */
     public function getDown()
     {
-        switch ($this->getType()) {
+        switch ($type = $this->getType()) {
             case 'create':
                 return [
                     'type' => 'create',
-                    'command' => 'dropIfExists',
+                    'line' => 'dropIfExists',
                 ];
 
             case 'delete':
@@ -331,21 +361,17 @@ class MetaNode extends AbstractNode
                     if ($metaNode->getTableName() === $this->getTableName()) {
                         return [
                             'type' => 'delete',
-                            'fields' => $this->getFieldNodes(),
-                            'constraints' => $this->getConstraintCommands(),
-                            'indexes' => $this->getIndexCommands(),
+                            'blocks' => $this->getCommands(),
                         ];
                     }
                 }
-                throw new \Exception('Unexpected error');
+                throw new \Exception('It looks like we are generating a delete migration for an inexistant table.');
 
             case 'update':
             default:
                 return [
-                    'type' => 'update',
-                    'fields' => $this->getFieldReverseCommands(),
-                    'constraints' => $this->getConstraintReverseCommands(),
-                    'indexes' => $this->getIndexReverseCommands(),
+                    'type' => $type,
+                    'blocks' => $this->getReverseCommands(),
                 ];
         }
     }

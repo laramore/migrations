@@ -95,7 +95,10 @@ class SchemaNode extends Node
                         $this->removeNode($j--);
                         $i -= 2;
                     } else if ($nodeToCheck instanceof Command) {
-                        $index = \str_replace(['-', '.'], '_', \strtolower($nodeToCheck->getTableName().'_'.$nodeToCheck->getAttname().'_unique'));
+                        $index = \str_replace(
+                            ['-', '.'], '_',
+                            \strtolower($nodeToCheck->getTableName().'_'.$nodeToCheck->getAttname().'_unique')
+                        );
                         $this->removeNode($i);
                         $this->removeNode($j--);
                         $i -= 2;

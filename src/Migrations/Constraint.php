@@ -10,8 +10,6 @@
 
 namespace Laramore\Migrations;
 
-use Laramore\Meta;
-
 class Constraint extends AbstractCommand
 {
     /**
@@ -36,6 +34,13 @@ class Constraint extends AbstractCommand
     protected $command;
 
     /**
+     * Class to generate a valid command.
+     *
+     * @var string
+     */
+    protected $commandClass = Command::class;
+
+    /**
      * Type of the constraint.
      *
      * @var string
@@ -54,7 +59,7 @@ class Constraint extends AbstractCommand
     {
         $this->tableName = $tableName;
         $this->needs = $needs;
-        $this->command = new Command($tableName, $this->constraint, $attname, $properties);
+        $this->command = new $this->commandClass($tableName, $this->constraint, $attname, $properties);
     }
 
     /**

@@ -10,7 +10,9 @@
 
 namespace Laramore\Migrations;
 
-class DropIndex extends Index
+use Laramore\Interfaces\Migration\IsADropCommand;
+
+class DropIndex extends Index implements IsADropCommand
 {
     /**
      * Create a new drop command for a specific key.
@@ -18,14 +20,15 @@ class DropIndex extends Index
      * @param string $tableName
      * @param string $type
      * @param string $key
-     * @param Index  $reversedConstraint
+     * @param Index  $reversedIndex
      */
     public function __construct(string $tableName, string $type, string $key, Index $reversedIndex=null)
     {
         parent::__construct($tableName, $type, []);
 
         $this->attname = $key;
-        $this->command = new Command($tableName, $this->constraint, \is_null($reversedIndex) ? $key : $reversedIndex->getIndexName(), []);
+        $name = \is_null($reversedIndex) ? $key : $reversedIndex->getIndexName();
+        $this->command = new Command($tableName, $this->constraint, $name, []);
 
         if (!\is_null($reversedIndex)) {
             $this->reverse = $reversedIndex->getCommand();
