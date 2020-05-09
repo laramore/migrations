@@ -123,7 +123,7 @@ class MigrationsProvider extends ServiceProvider implements LaramoreProvider
      */
     public function bootingCallback()
     {
-        Type::define('migration_type');
+        Type::define('migration_name');
         Type::define('migration_properties', []);
     }
 

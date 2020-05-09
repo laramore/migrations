@@ -102,17 +102,17 @@ class BlueprintNode extends MetaNode
         $type = $this->popFromColumn($column, 'type');
 
         // Here, if our field is an integer, we need to handle unsigned and increment integers.
-        if ($type === Type::get('integer')->getMigrationType()) {
+        if ($type === Type::get('integer')->getMigrationName()) {
             if ($column->unsigned) {
                 unset($column->unsigned);
 
-                $type = Type::get('unsigned_integer')->getMigrationType();
+                $type = Type::get('unsigned_integer')->getMigrationName();
             }
 
             if ($column->autoIncrement) {
                 unset($column->autoIncrement);
 
-                $type = Type::get('increment')->getMigrationType();
+                $type = Type::get('increment')->getMigrationName();
             }
         }
 

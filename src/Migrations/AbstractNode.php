@@ -10,7 +10,9 @@
 
 namespace Laramore\Migrations;
 
-use Meta, Migrations;
+use Laramore\Facades\{
+    Meta, Migrations
+};
 
 abstract class AbstractNode
 {

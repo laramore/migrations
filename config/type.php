@@ -22,11 +22,13 @@ return [
                 'length:maxLength', 'nullable', 'default',
             ],
         ],
-        'composite' => [
-            'migration_type' => null,
+        'date_time' => [
+            'migration_property_keys' => [
+                'nullable', 'default',
+            ],
         ],
         'email' => [
-            'migration_type' => 'char',
+            'migration_name' => 'char',
             'migration_property_keys' => [
                 'length:maxLength', 'nullable', 'default',
             ],
@@ -37,12 +39,17 @@ return [
             ],
         ],
         'increment' => [
-            'migration_type' => 'increments',
+            'migration_name' => 'increments',
             'migration_property_keys' => [
                 'nullable', 'default',
             ],
         ],
         'integer' => [
+            'migration_property_keys' => [
+                'nullable', 'default',
+            ],
+        ],
+        'json' => [
             'migration_property_keys' => [
                 'nullable', 'default',
             ],
@@ -53,32 +60,32 @@ return [
             ],
         ],
         'link' => [
-            'migration_type' => null,
+            'migration_name' => null,
         ],
         'password' => [
-            'migration_type' => 'char',
+            'migration_name' => 'char',
             'migration_property_keys' => [
                 'length:maxLength', 'nullable', 'default',
             ],
         ],
         'primary_id' => [
-            'migration_type' => 'increments',
+            'migration_name' => 'increments',
             'migration_property_keys' => [],
         ],
         'pattern' => [
-            'migration_type' => 'char',
+            'migration_name' => 'char',
             'migration_property_keys' => [
                 'length:maxLength', 'nullable', 'default',
             ],
         ],
         'text' => [
-            'migration_type' => 'text',
+            'migration_name' => 'text',
             'migration_property_keys' => [
                 'nullable', 'default',
             ],
         ],
         'timestamp' => [
-            'migration_type' => 'timestamp',
+            'migration_name' => 'timestamp',
             'migration_property_keys' => [
                 'nullable', 'default', 'useCurrent',
             ],
