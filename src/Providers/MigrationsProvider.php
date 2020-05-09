@@ -12,8 +12,8 @@ namespace Laramore\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Database\Migrations\Migrator;
-use Laramore\Interfaces\{
-    IsALaramoreManager, IsALaramoreProvider
+use Laramore\Contracts\{
+    Manager\LaramoreManager, Provider\LaramoreProvider
 };
 use Laramore\Traits\Provider\MergesConfig;
 use Laramore\Commands\{
@@ -22,7 +22,7 @@ use Laramore\Commands\{
 use Laramore\Migrations\MigrationManager;
 use Migrations, Type;
 
-class MigrationsProvider extends ServiceProvider implements IsALaramoreProvider
+class MigrationsProvider extends ServiceProvider implements LaramoreProvider
 {
     use MergesConfig;
 
@@ -108,9 +108,9 @@ class MigrationsProvider extends ServiceProvider implements IsALaramoreProvider
     /**
      * Generate the corresponded manager.
      *
-     * @return IsALaramoreManager
+     * @return LaramoreManager
      */
-    public static function generateManager(): IsALaramoreManager
+    public static function generateManager(): LaramoreManager
     {
         return new MigrationManager(static::getDefaults());
     }

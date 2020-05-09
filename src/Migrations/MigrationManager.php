@@ -16,8 +16,7 @@ use Illuminate\Support\Str;
 use Laramore\Fields\{
     BaseField, AttributeField
 };
-use Laramore\Fields\Constraint\Foreign;
-use Laramore\Interfaces\IsALaramoreManager;
+use Laramore\Contracts\Manager\LaramoreManager;
 use Laramore\Migrations\{
     Command, Constraint, MetaNode, Node, Index, SchemaNode
 };
@@ -27,7 +26,7 @@ use Laramore\Facades\{
     Meta as MetaManager, Option
 };
 
-class MigrationManager implements IsALaramoreManager
+class MigrationManager implements LaramoreManager
 {
     use IsLocked;
 
