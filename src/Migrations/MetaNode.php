@@ -10,10 +10,11 @@
 
 namespace Laramore\Migrations;
 
-use Laramore\Meta;
+use Laramore\Contracts\Eloquent\Meta;
 use Laramore\Facades\{
-    Meta as MetaManager, Migrations
+    Meta, Migrations
 };
+use Laramore\Fields\AttributeField;
 use Laramore\Interfaces\Migration\IsADropCommand;
 
 class MetaNode extends AbstractNode
@@ -236,11 +237,11 @@ class MetaNode extends AbstractNode
     /**
      * Return the meta managing this table.
      *
-     * @return Meta
+     * @return LaramoreMeta
      */
-    public function getMeta(): Meta
+    public function getMeta(): LaramoreMeta
     {
-        return MetaManager::getForTableName($this->getTableName());
+        return Meta::getForTableName($this->getTableName());
     }
 
     /**
@@ -296,7 +297,7 @@ class MetaNode extends AbstractNode
     protected function optimizing()
     {
         if ($this->type !== 'delete') {
-            $fields = $this->getMeta()->getAttributes();
+            $fields = $this->getMeta()->getFields(AttributeField::class);
             $unorderedNodes = $this->nodes;
             $this->nodes = [];
 

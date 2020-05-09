@@ -13,8 +13,9 @@ namespace Laramore\Migrations;
 use Illuminate\Database\Migrations\Migrator;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
-use Laramore\Fields\{
-    BaseField, AttributeField
+use Laramore\Fields\BaseField;
+use Laramore\Contracts\Field\{
+    AttributeField, Constraint\RelationConstraint
 };
 use Laramore\Contracts\Manager\LaramoreManager;
 use Laramore\Migrations\{
@@ -166,10 +167,18 @@ class MigrationManager implements LaramoreManager
                 if ($field->hasOption($snakeKey)) {
                     $properties[$name] = true;
                 }
-            } else if (\method_exists($field, $method = 'get'.\ucfirst($key))) {
-                $properties[$name] = \call_user_func([$field, $method]);
-            } else if (!is_null($value = $field->getProperty($key, false))) {
-                $properties[$name] = $value;
+            } else {
+                $value = null;
+
+                if (\method_exists($field, $method = 'get'.\ucfirst($key))) {
+                    $value = \call_user_func([$field, $method]);
+                } else {
+                    $value = $field->getProperty($key);
+                }
+
+                if (!\is_null($value)) {
+                    $properties[$name] = $value;
+                }
             }
         }
 
@@ -188,54 +197,60 @@ class MigrationManager implements LaramoreManager
         $tableName = $meta->getTableName();
 
         // Generate a command for each field.
-        foreach ($meta->getFields() as $field) {
-            $type = $field->getType()->getMigrationType();
-            if (\is_null($type)) {
-                continue;
-            }
+        foreach ($meta->getFields(AttributeField::class) as $field) {
+            $type = $field->getType()->getMigrationName();
 
             $properties = $this->getFieldProperties($field);
             $nodes[] = $command = new Command($tableName, $type, $field->getAttname(), $properties);
+            $constraints = \array_merge(...\array_values($field->getConstraintHandler()->all()));
 
-            foreach ($field->getConstraints() as $constraint) {
-                if ($constraint->count() > 1) {
+            foreach ($constraints as $constraint) {
+                if ($constraint->isComposed()) {
                     continue;
                 }
 
-                if ($constraint->getConstraintName() === 'primary'
-                    && $constraint->all()[0]->getType()->getMigrationType() === 'increments') {
+                if ($constraint->getConstraintType() === 'primary'
+                    && $constraint->all()[0]->getType()->getMigrationName() === 'increments') {
                     continue;
                 }
 
-                $command->setProperty($constraint->getConstraintName(), $constraint->hasName() ? $constraint->getName() : true);
+                $command->setProperty($constraint->getConstraintType(), $constraint->hasName() ? $constraint->getName() : true);
             }
         }
 
+        $constraints = \array_merge(...\array_values($meta->getConstraintHandler()->all()));
+
         // Generate a constraint for each composite relations.
-        foreach ($meta->getConstraintHandler()->all() as $constraint) {
-            if ($constraint instanceof Foreign) {
-                $needs = \array_map(function (AttributeField $field) {
-                    return [
-                        'table' => $field->getMeta()->getTableName(),
-                        'field' => $field->attname,
-                    ];
-                }, $constraint->all());
-
-                $field = $constraint->getOnField();
-
-                $properties = [
-                    'references' => $field->attname,
-                    'on' => $field->getMeta()->getTableName(),
-                ];
-
-                $nodes[] = new Constraint($tableName, $constraint->getOffField()->attname, $needs, $properties);
-            } else {
-                if ($constraint->count() === 1) {
+        foreach ($constraints as $constraint) {
+            if ($constraint instanceof RelationConstraint) {
+                if ($constraint->getSourceAttribute()->getMeta() !== $meta) {
                     continue;
                 }
 
-                $nodes[] = new Index($tableName, $constraint->getConstraintName(), \array_map(function ($field) {
-                    return $field->attname;
+                foreach ($constraint->getSourceAttributes() as $index => $sourceField) {
+                    $targetField = $constraint->getTargetAttributes()[$index];
+
+                    $needs = [
+                        [
+                            'table' => $sourceField->getMeta()->getTableName(),
+                            'field' => $sourceField->getNative(),
+                        ],
+                        [
+                            'table' => $targetField->getMeta()->getTableName(),
+                            'field' => $targetField->getNative(),
+                        ]
+                    ];
+
+                    $properties = [
+                        'references' => $targetField->getNative(),
+                        'on' => $targetField->getMeta()->getTableName(),
+                    ];
+
+                    $nodes[] = new Constraint($tableName, $sourceField->getNative(), $needs, $properties);
+                }
+            } else if ($constraint->isComposed()) {
+                $nodes[] = new Index($tableName, $constraint->getConstraintType(), \array_map(function ($field) {
+                    return $field->getNative();
                 }, $constraint->all()));
             }
         }
