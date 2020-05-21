@@ -22,7 +22,7 @@ use Laramore\Migrations\{
     Command, Constraint, MetaNode, Node, Index, SchemaNode
 };
 use Laramore\Traits\IsLocked;
-use Laramore\Meta;
+use Laramore\Eloquent\Meta;
 use Laramore\Facades\{
     Meta as MetaManager, Option
 };

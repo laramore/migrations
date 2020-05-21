@@ -10,7 +10,7 @@
 
 namespace Laramore\Migrations;
 
-use Laramore\Contracts\Eloquent\Meta;
+use Laramore\Contracts\Eloquent\LaramoreMeta;
 use Laramore\Facades\{
     Meta, Migrations
 };
