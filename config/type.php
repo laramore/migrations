@@ -35,7 +35,7 @@ return [
         ],
         'enum' => [
             'migration_property_keys' => [
-                'allowed:elementsValue', 'length:maxLength', 'nullable', 'default:defaultValue',
+                'allowed:values', 'length:maxLength', 'nullable', 'default:defaultValue',
             ],
         ],
         'increment' => [
