@@ -12,6 +12,11 @@ return [
     */
 
     'configurations' => [
+        'binary' => [
+            'migration_property_keys' => [
+                'nullable', 'default',
+            ],
+        ],
         'boolean' => [
             'migration_property_keys' => [
                 'nullable', 'default',

@@ -176,6 +176,10 @@ class MigrationManager implements LaramoreManager
                     $value = $field->getProperty($key);
                 }
 
+                if ($key === 'default') {
+                    $value = $field->dry($value);
+                }
+
                 if (!\is_null($value)) {
                     $properties[$name] = $value;
                 }
@@ -210,7 +214,7 @@ class MigrationManager implements LaramoreManager
                 }
 
                 if ($constraint->getConstraintType() === 'primary'
-                    && $constraint->all()[0]->getType()->getMigrationName() === 'increments') {
+                    && $constraint->getAttribute()->getType()->getMigrationName() === 'increments') {
                     continue;
                 }
 
@@ -251,7 +255,7 @@ class MigrationManager implements LaramoreManager
             } else if ($constraint->isComposed()) {
                 $nodes[] = new Index($tableName, $constraint->getConstraintType(), \array_map(function ($field) {
                     return $field->getNative();
-                }, $constraint->all()));
+                }, $constraint->getAttributes()));
             }
         }
 
@@ -349,7 +353,6 @@ class MigrationManager implements LaramoreManager
         if (is_null($this->actualNode)) {
             $this->loadActualNode();
         }
-
         return $this->actualNode;
     }
 
