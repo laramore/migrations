@@ -10,9 +10,7 @@
     },
     "require": {
         "php": ">=7.0.8",
-        "laramore/laramore": "~0.14",
-        "illuminate/database": ">=5.5",
-        "illuminate/filesystem": ">=5.5",
+        "laramore/laramore": ">=0.18",
         "doctrine/dbal": "^2.5"
     },
     "authors": [
