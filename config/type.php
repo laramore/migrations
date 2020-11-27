@@ -32,6 +32,11 @@ return [
                 'nullable', 'default',
             ],
         ],
+        'decimal' => [
+            'migration_property_keys' => [
+                'nullable', 'default',
+            ],
+        ],
         'email' => [
             'migration_name' => 'char',
             'migration_property_keys' => [
@@ -56,10 +61,35 @@ return [
         ],
         'json' => [
             'migration_property_keys' => [
-                'nullable', 'default',
+                'nullable',
             ],
         ],
         'unsigned_integer' => [
+            'migration_property_keys' => [
+                'nullable', 'default',
+            ],
+        ],
+        'unsigned_decimal' => [
+            'migration_property_keys' => [
+                'nullable', 'default',
+            ],
+        ],
+        'big_decimal' => [
+            'migration_property_keys' => [
+                'nullable', 'default',
+            ],
+        ],
+        'small_decimal' => [
+            'migration_property_keys' => [
+                'nullable', 'default',
+            ],
+        ],
+        'big_unsigned_decimal' => [
+            'migration_property_keys' => [
+                'nullable', 'default',
+            ],
+        ],
+        'small_unsigned_decimal' => [
             'migration_property_keys' => [
                 'nullable', 'default',
             ],
