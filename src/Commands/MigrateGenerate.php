@@ -11,8 +11,7 @@
 namespace Laramore\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Database\Migrations\Migrator;
-use Migrations;
+use Laramore\Facades\Migration;
 
 class MigrateGenerate extends Command
 {
@@ -82,7 +81,7 @@ class MigrateGenerate extends Command
             }
         }
 
-        $generatedFiles = Migrations::generateMigrations();
+        $generatedFiles = Migration::generateMigrations();
 
         if (\count($generatedFiles)) {
             foreach ($generatedFiles as $generatedFile) {

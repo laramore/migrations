@@ -12,7 +12,7 @@ namespace Laramore\Facades;
 
 use Illuminate\Support\Facades\Facade;
 
-class Migrations extends Facade
+class Migration extends Facade
 {
     /**
      * Give the name of the accessor.
@@ -21,6 +21,6 @@ class Migrations extends Facade
      */
     protected static function getFacadeAccessor()
     {
-        return 'Migrations';
+        return 'migration';
     }
 }

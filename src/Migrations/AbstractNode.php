@@ -11,7 +11,7 @@
 namespace Laramore\Migrations;
 
 use Laramore\Facades\{
-    Meta, Migrations
+    Meta, Migration
 };
 
 abstract class AbstractNode
@@ -275,7 +275,7 @@ abstract class AbstractNode
         // If we are packing into meta nodes, we need to know if they are already created or not.
         $passedTables = \array_map(function ($node) {
             return $node->getTableName();
-        }, Migrations::getActualNode()->getNodes());
+        }, Migration::getActualNode()->getNodes());
 
         for ($i = 0; $i < \count($this->getNodes()); $i++) {
             $node = $this->getNodes()[$i];

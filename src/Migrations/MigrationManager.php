@@ -15,7 +15,7 @@ use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
 use Laramore\Fields\BaseField;
 use Laramore\Contracts\Field\{
-    AttributeField, Constraint\RelationConstraint
+    AttributeField, Constraint\RelationalConstraint, Constraint\IndexableConstraint
 };
 use Laramore\Contracts\Manager\LaramoreManager;
 use Laramore\Migrations\{
@@ -226,7 +226,11 @@ class MigrationManager implements LaramoreManager
 
         // Generate a constraint for each composite relations.
         foreach ($constraints as $constraint) {
-            if ($constraint instanceof RelationConstraint) {
+            if (!$constraint->getConfig('migrable', false)) {
+                continue;
+            }
+
+            if ($constraint instanceof RelationalConstraint) {
                 if ($constraint->getSourceAttribute()->getMeta() !== $meta) {
                     continue;
                 }
@@ -252,7 +256,7 @@ class MigrationManager implements LaramoreManager
 
                     $nodes[] = new Constraint($tableName, $sourceField->getNative(), $needs, $properties);
                 }
-            } else if ($constraint->isComposed()) {
+            } else if ($constraint instanceof IndexableConstraint && $constraint->isComposed()) {
                 $nodes[] = new Index($tableName, $constraint->getConstraintType(), \array_map(function ($field) {
                     return $field->getNative();
                 }, $constraint->getAttributes()));
@@ -288,7 +292,7 @@ class MigrationManager implements LaramoreManager
                 $wantedNode[] = new MetaNode($nodes, $meta->getTableName());
             }
         }
-
+        
         $this->wantedNode = new Node($wantedNode);
         $this->wantedNode->organize()->optimize();
     }

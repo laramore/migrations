@@ -11,7 +11,7 @@
 namespace Laramore\Commands;
 
 use Illuminate\Console\Command;
-use Migrations;
+use Laramore\Facades\Migration;
 
 class MigrateClear extends Command
 {
@@ -32,7 +32,7 @@ class MigrateClear extends Command
      */
     public function handle()
     {
-        $removedFiles = Migrations::clearMigrations();
+        $removedFiles = Migration::clearMigrations();
 
         if (\count($removedFiles)) {
             foreach ($removedFiles as $removedFile) {

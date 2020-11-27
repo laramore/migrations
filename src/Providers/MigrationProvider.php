@@ -12,17 +12,17 @@ namespace Laramore\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Database\Migrations\Migrator;
-use Laramore\Contracts\{
-    Manager\LaramoreManager, Provider\LaramoreProvider
-};
+use Laramore\Contracts\Manager\LaramoreManager;
 use Laramore\Traits\Provider\MergesConfig;
 use Laramore\Commands\{
     MigrateClear, MigrateGenerate
 };
 use Laramore\Migrations\MigrationManager;
-use Migrations, Type;
+use Laramore\Facades\{
+    Migration, Type
+};
 
-class MigrationsProvider extends ServiceProvider implements LaramoreProvider
+class MigrationProvider extends ServiceProvider
 {
     use MergesConfig;
 
@@ -34,7 +34,7 @@ class MigrationsProvider extends ServiceProvider implements LaramoreProvider
     protected static $migrator;
 
     /**
-     * Before booting, create our definition for migrations.
+     * Before booting, create our definition for migration.
      *
      * @return void
      */
@@ -44,7 +44,11 @@ class MigrationsProvider extends ServiceProvider implements LaramoreProvider
             __DIR__.'/../../config/type.php', 'type',
         );
 
-        $this->app->singleton('Migrations', function() {
+        $this->mergeConfigFrom(
+            __DIR__.'/../../config/field/constraint.php', 'field.constraint',
+        );
+
+        $this->app->singleton('migration', function() {
             return static::generateManager();
         });
 
@@ -66,7 +70,7 @@ class MigrationsProvider extends ServiceProvider implements LaramoreProvider
     }
 
     /**
-     * Laod all views required for the migrations generation.
+     * Laod all views required for the migration generation.
      *
      * @return void
      */
@@ -134,6 +138,6 @@ class MigrationsProvider extends ServiceProvider implements LaramoreProvider
      */
     public function bootedCallback()
     {
-        Migrations::lock();
+        Migration::lock();
     }
 }

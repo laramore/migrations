@@ -12,7 +12,7 @@ namespace Laramore\Migrations;
 
 use Laramore\Contracts\Eloquent\LaramoreMeta;
 use Laramore\Facades\{
-    Meta, Migrations
+    Meta, Migration
 };
 use Laramore\Fields\AttributeField;
 use Laramore\Interfaces\Migration\IsADropCommand;
@@ -357,7 +357,7 @@ class MetaNode extends AbstractNode
                 ];
 
             case 'delete':
-                foreach (Migrations::getActualNode()->getNodes() as $metaNode) {
+                foreach (Migration::getActualNode()->getNodes() as $metaNode) {
                     if ($metaNode->getTableName() === $this->getTableName()) {
                         return [
                             'type' => 'delete',

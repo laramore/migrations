@@ -49,10 +49,10 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Laramore\\Providers\\MigrationsProvider"
+                "Laramore\\Providers\\MigrationProvider"
             ],
             "aliases": {
-                "Migrations": "Laramore\\Facades\\Migrations"
+                "Migration": "Laramore\\Facades\\Migration"
             }
         }
     }

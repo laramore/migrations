@@ -12,7 +12,7 @@ namespace Laramore\Facades;
 
 use Illuminate\Support\Facades\Schema as BaseSchema;
 use Laramore\Database\Schema\Builder;
-use Migrations;
+use Laramore\Facades\Migration;
 
 /**
  * @see \Illuminate\Support\Facades\Schema
@@ -26,7 +26,7 @@ class Schema extends BaseSchema
      */
     public static function isProxied()
     {
-        return Migrations::isLoadingMigrations();
+        return Migration::isLoadingMigrations();
     }
 
     /**
