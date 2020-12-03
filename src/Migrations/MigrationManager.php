@@ -13,9 +13,9 @@ namespace Laramore\Migrations;
 use Illuminate\Database\Migrations\Migrator;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
-use Laramore\Fields\BaseField;
 use Laramore\Contracts\Field\{
-    AttributeField, Constraint\RelationalConstraint, Constraint\IndexableConstraint
+    AttributeField, Constraint\RelationalConstraint, Constraint\IndexableConstraint,
+    IncrementField
 };
 use Laramore\Contracts\Manager\LaramoreManager;
 use Laramore\Migrations\{
@@ -139,57 +139,6 @@ class MigrationManager implements LaramoreManager
     }
 
     /**
-     * Return the main properties of a field.
-     *
-     * @param BaseField $field
-     * @return array
-     */
-    protected function getFieldProperties(BaseField $field): array
-    {
-        if (\method_exists($field, 'getMigrationPropertyKeys')) {
-            $keys = \call_user_func([$field, 'getMigrationPropertyKeys']);
-        } else {
-            $keys = $field->getType()->getMigrationPropertyKeys();
-        }
-
-        if (\method_exists($field, 'getMigrationProperties')) {
-            return \call_user_func([$field, 'getMigrationProperties'], $keys);
-        }
-
-        $properties = [];
-
-        foreach ($keys as $property) {
-            $nameKey = explode(':', $property);
-            $name = $nameKey[0];
-            $key = ($nameKey[1] ?? $name);
-
-            if (Option::has($snakeKey = Str::snake($key))) {
-                if ($field->hasOption($snakeKey)) {
-                    $properties[$name] = true;
-                }
-            } else {
-                $value = null;
-
-                if (\method_exists($field, $method = 'get'.\ucfirst($key))) {
-                    $value = \call_user_func([$field, $method]);
-                } else {
-                    $value = $field->getProperty($key);
-                }
-
-                if ($key === 'default') {
-                    $value = $field->dry($value);
-                }
-
-                if (!\is_null($value)) {
-                    $properties[$name] = $value;
-                }
-            }
-        }
-
-        return $properties;
-    }
-
-    /**
      * Generate sub nodes/commands/constraints from a meta.
      *
      * @param  Meta $meta
@@ -202,19 +151,18 @@ class MigrationManager implements LaramoreManager
 
         // Generate a command for each field.
         foreach ($meta->getFields(AttributeField::class) as $field) {
-            $type = $field->getType()->getMigrationName();
+            $type = $field->getMigrationType();
 
-            $properties = $this->getFieldProperties($field);
+            $properties = $field->getMigrationProperties();
             $nodes[] = $command = new Command($tableName, $type, $field->getAttname(), $properties);
             $constraints = \array_merge(...\array_values($field->getConstraintHandler()->all()));
 
-            foreach ($constraints as $constraint) {
-                if ($constraint->isComposed()) {
-                    continue;
-                }
+            if ($field instanceof IncrementField) {
+                continue;
+            }
 
-                if ($constraint->getConstraintType() === 'primary'
-                    && $constraint->getAttribute()->getType()->getMigrationName() === 'increments') {
+            foreach ($constraints as $constraint) {
+                if ($constraint->isComposed() || ($constraint instanceof RelationalConstraint)) {
                     continue;
                 }
 
@@ -292,7 +240,7 @@ class MigrationManager implements LaramoreManager
                 $wantedNode[] = new MetaNode($nodes, $meta->getTableName());
             }
         }
-        
+
         $this->wantedNode = new Node($wantedNode);
         $this->wantedNode->organize()->optimize();
     }
@@ -309,7 +257,7 @@ class MigrationManager implements LaramoreManager
         $this->migrator->requireFiles($this->migrationFiles);
 
         foreach ($this->migrationFiles as $migrationFile) {
-            $migration = $this->migrator->resolve($this->migrator->getMigrationName($migrationFile));
+            $migration = $this->migrator->resolve($this->migrator->getMigrationType($migrationFile));
 
             if (\method_exists($migration, 'up')) {
                 $migration->up();
