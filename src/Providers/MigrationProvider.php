@@ -18,9 +18,9 @@ use Laramore\Commands\{
     MigrateClear, MigrateGenerate
 };
 use Laramore\Migrations\MigrationManager;
-use Laramore\Facades\{
-    Migration, Type
-};
+use Laramore\Facades\Migration;
+use Laramore\Fields\BaseField;
+use Laramore\Mixins\MigrationField;
 
 class MigrationProvider extends ServiceProvider
 {
@@ -41,11 +41,11 @@ class MigrationProvider extends ServiceProvider
     public function register()
     {
         $this->mergeConfigFrom(
-            __DIR__.'/../../config/type.php', 'type',
-        );
-
-        $this->mergeConfigFrom(
             __DIR__.'/../../config/field/constraint.php', 'field.constraint',
+        );
+        
+        $this->mergeConfigFrom(
+            __DIR__.'/../../config/field/migrations.php', 'field.migrations',
         );
 
         $this->app->singleton('migration', function() {
@@ -127,8 +127,17 @@ class MigrationProvider extends ServiceProvider
      */
     public function bootingCallback()
     {
-        Type::define('migration_name');
-        Type::define('migration_properties', []);
+        $this->setMacros();
+    }
+
+    /**
+     * Add all required macros for validations.
+     *
+     * @return void
+     */
+    protected function setMacros()
+    {
+        BaseField::mixin(new MigrationField);
     }
 
     /**
