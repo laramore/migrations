@@ -63,6 +63,11 @@ class MigrationField {
                 $name = $nameKey[0];
                 $key = ($nameKey[1] ?? $name);
 
+                // Do not accept default values when they are dynamic.
+                if ($key === 'default' && \is_callable($this->default) && !\is_string($this->default)) {
+                    continue;
+                }
+
                 if (Option::has($snakeKey = Str::snake($key))) {
                     if ($this->hasOption($snakeKey)) {
                         $properties[$name] = true;
