@@ -107,5 +107,11 @@ return [
             'nullable', 'default',
         ],
     ],
+    Uri::class => [
+        'type' => 'text',
+        'property_keys' => [
+            'nullable', 'default',
+        ],
+    ],
 
 ];
