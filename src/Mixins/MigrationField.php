@@ -32,15 +32,9 @@ class MigrationField {
     public function getMigrationType()
     {
         return function () {
-            $path = 'field.migrations.'.static::class.'.type';
-    
-            if (!config()->has($path)) {
-                throw new \Exception('Missing migration configs for '.static::class);
-            }
-    
-            $type = config($path);
-
             /** @var \Laramore\Fields\BaseField $this */
+            $type = $this->getMigrationConfig('type');
+
             if ($this instanceof NumericField && !($this instanceof IncrementField)) {
                 if ($this->hasOption(Option::bigNumber())) {
                     $type = 'big'.Str::studly($type);
@@ -61,13 +55,7 @@ class MigrationField {
     {
         return function () {
             /** @var \Laramore\Fields\BaseField $this */
-            $path = 'field.migrations.'.static::class.'.property_keys';
-
-            if (!config()->has($path)) {
-                throw new \Exception('Missing migration configs for '.static::class);
-            }
-
-            $keys =config($path);
+            $keys = $this->getMigrationConfig('property_keys', []);
             $properties = [];
 
             foreach ($keys as $property) {

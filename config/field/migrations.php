@@ -55,12 +55,6 @@ return [
             'allowed:values', 'length:maxLength', 'nullable', 'default:defaultValue',
         ],
     ],
-    TextEnum::class => [
-        'type' => 'enum',
-        'property_keys' => [
-            'allowed:values', 'length:maxLength', 'nullable', 'default:defaultValue',
-        ],
-    ],
     Increment::class => [
         'type' => 'increments',
         'property_keys' => [
