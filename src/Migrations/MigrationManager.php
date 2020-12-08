@@ -14,8 +14,11 @@ use Illuminate\Database\Migrations\Migrator;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
 use Laramore\Contracts\Field\{
-    AttributeField, Constraint\RelationalConstraint, Constraint\IndexableConstraint,
-    IncrementField
+    AttributeField, IncrementField,
+    Constraint\RelationalConstraint, Constraint\IndexableConstraint
+};
+use Laramore\Fields\Constraint\{
+    BaseIndexableConstraint, BaseRelationalConstraint
 };
 use Laramore\Contracts\Manager\LaramoreManager;
 use Laramore\Migrations\{
@@ -23,9 +26,7 @@ use Laramore\Migrations\{
 };
 use Laramore\Traits\IsLocked;
 use Laramore\Eloquent\Meta;
-use Laramore\Facades\{
-    Meta as MetaManager, Option
-};
+use Laramore\Facades\Meta as MetaManager;
 
 class MigrationManager implements LaramoreManager
 {
@@ -93,6 +94,16 @@ class MigrationManager implements LaramoreManager
      * @var Node
      */
     protected $missingNode;
+
+    public static $indexableConstraints = [
+        BaseIndexableConstraint::PRIMARY,
+        BaseIndexableConstraint::INDEX,
+        BaseIndexableConstraint::UNIQUE,
+    ];
+
+    public static $relationalConstraints = [
+        BaseRelationalConstraint::FOREIGN,
+    ];
 
     /**
      * Create the migration manager.
@@ -174,11 +185,9 @@ class MigrationManager implements LaramoreManager
 
         // Generate a constraint for each composite relations.
         foreach ($constraints as $constraint) {
-            if (!$constraint->getConfig('migrable', false)) {
-                continue;
-            }
+            $type = $constraint->getConstraintType();
 
-            if ($constraint instanceof RelationalConstraint) {
+            if ($constraint instanceof RelationalConstraint && \in_array($type, static::$relationalConstraints)) {
                 if ($constraint->getSourceAttribute()->getMeta() !== $meta) {
                     continue;
                 }
@@ -204,7 +213,7 @@ class MigrationManager implements LaramoreManager
 
                     $nodes[] = new Constraint($tableName, $sourceField->getNative(), $needs, $properties);
                 }
-            } else if ($constraint instanceof IndexableConstraint && $constraint->isComposed()) {
+            } else if ($constraint instanceof IndexableConstraint && \in_array($type, static::$indexableConstraints) && $constraint->isComposed()) {
                 $nodes[] = new Index($tableName, $constraint->getConstraintType(), \array_map(function ($field) {
                     return $field->getNative();
                 }, $constraint->getAttributes()));
