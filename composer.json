@@ -5,12 +5,12 @@
     "license": "MIT",
     "config": {
         "platform": {
-            "php": "7.0.8"
+            "php": "7.3"
         }
     },
     "require": {
-        "php": ">=7.0.8",
-        "laramore/laramore": ">=0.18",
+        "php": "^7.3|^8.0",
+        "laramore/laramore": ">=0.23.3",
         "doctrine/dbal": "^2.5"
     },
     "authors": [

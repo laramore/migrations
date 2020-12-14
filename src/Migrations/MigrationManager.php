@@ -95,16 +95,6 @@ class MigrationManager implements LaramoreManager
      */
     protected $missingNode;
 
-    public static $indexableConstraints = [
-        BaseIndexableConstraint::PRIMARY,
-        BaseIndexableConstraint::INDEX,
-        BaseIndexableConstraint::UNIQUE,
-    ];
-
-    public static $relationalConstraints = [
-        BaseRelationalConstraint::FOREIGN,
-    ];
-
     /**
      * Create the migration manager.
      *
@@ -187,7 +177,7 @@ class MigrationManager implements LaramoreManager
         foreach ($constraints as $constraint) {
             $type = $constraint->getConstraintType();
 
-            if ($constraint instanceof RelationalConstraint && \in_array($type, static::$relationalConstraints)) {
+            if ($constraint instanceof RelationalConstraint && \in_array($type, BaseRelationalConstraint::$migrable)) {
                 if ($constraint->getSourceAttribute()->getMeta() !== $meta) {
                     continue;
                 }
@@ -213,7 +203,7 @@ class MigrationManager implements LaramoreManager
 
                     $nodes[] = new Constraint($tableName, $sourceField->getNative(), $needs, $properties);
                 }
-            } else if ($constraint instanceof IndexableConstraint && \in_array($type, static::$indexableConstraints) && $constraint->isComposed()) {
+            } else if ($constraint instanceof IndexableConstraint && \in_array($type, BaseIndexableConstraint::$migrable) && $constraint->isComposed()) {
                 $nodes[] = new Index($tableName, $constraint->getConstraintType(), \array_map(function ($field) {
                     return $field->getNative();
                 }, $constraint->getAttributes()));
