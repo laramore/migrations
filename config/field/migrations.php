@@ -56,7 +56,7 @@ return [
         ],
     ],
     Increment::class => [
-        'type' => 'increments',
+        'type' => 'integer',
         'property_keys' => [
             'nullable', 'default',
         ],

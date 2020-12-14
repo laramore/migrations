@@ -304,6 +304,7 @@ class MigrationManager implements LaramoreManager
         if (is_null($this->actualNode)) {
             $this->loadActualNode();
         }
+
         return $this->actualNode;
     }
 

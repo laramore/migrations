@@ -17,10 +17,16 @@ use Laramore\Contracts\Field\{
 use Laramore\Facades\Option;
 
 
-class MigrationField {
-    public function getMigrationConfig() 
+class MigrationField
+{
+    /**
+     * Return migration config.
+     *
+     * @return void
+     */
+    public function getMigrationConfig()
     {
-        return function (string $path = '', $default = null) {
+        return function (string $path='', $default=null) {
             if (!config()->has('field.migrations.'.static::class)) {
                 throw new \Exception('Missing migration configs for '.static::class);
             }
@@ -29,10 +35,15 @@ class MigrationField {
         };
     }
 
+    /**
+     * Return migration type.
+     *
+     * @return void
+     */
     public function getMigrationType()
     {
         return function () {
-            /** @var \Laramore\Fields\BaseField $this */
+            // @var \Laramore\Fields\BaseField $this
             $type = $this->getMigrationConfig('type');
 
             if ($this instanceof NumericField && !($this instanceof IncrementField)) {
@@ -51,10 +62,15 @@ class MigrationField {
         };
     }
 
+    /**
+     * Return migration properties.
+     *
+     * @return void
+     */
     public function getMigrationProperties()
     {
         return function () {
-            /** @var \Laramore\Fields\BaseField $this */
+            // @var \Laramore\Fields\BaseField $this
             $keys = $this->getMigrationConfig('property_keys', []);
             $properties = [];
 

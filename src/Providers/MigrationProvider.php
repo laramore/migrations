@@ -43,7 +43,7 @@ class MigrationProvider extends ServiceProvider
         $this->mergeConfigFrom(
             __DIR__.'/../../config/field/constraint.php', 'field.constraint',
         );
-        
+
         $this->mergeConfigFrom(
             __DIR__.'/../../config/field/migrations.php', 'field.migrations',
         );
