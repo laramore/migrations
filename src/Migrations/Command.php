@@ -118,6 +118,21 @@ class Command extends AbstractCommand
             unset($properties['allowed']);
         }
 
+        // For decimals defined.
+        if (\in_array($this->type, ['float', 'decimal', 'double'])) {
+            if (isset($properties['total'])) {
+                $properties[$this->type][] = $properties['total'];
+
+                unset($properties['total']);
+            }
+
+            if (isset($properties['places'])) {
+                $properties[$this->type][] = $properties['places'];
+
+                unset($properties['places']);
+            }
+        }
+
         return $properties;
     }
 

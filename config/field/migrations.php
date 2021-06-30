@@ -40,7 +40,7 @@ return [
     Decimal::class => [
         'type' => 'decimal',
         'property_keys' => [
-            'nullable', 'default',
+            'total:totalDigits', 'places:decimalDigits', 'nullable', 'default',
         ],
     ],
     Email::class => [

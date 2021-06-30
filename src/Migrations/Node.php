@@ -339,11 +339,26 @@ class Node extends AbstractNode
                     }
 
                     if (\in_array($commandType, ['enum', 'set'])) {
-                        $oldProperties['allowed'] = $nodeProperties['allowed'];
-                        $newProperties['allowed'] = $commandProperties['allowed'];
+                        if (isset($nodeProperties['allowed'])) {
+                            $oldProperties['allowed'] = $nodeProperties['allowed'];
+                            $newProperties['allowed'] = $commandProperties['allowed'];
+                        }
                     }
 
-                    if ($count = (\count($newProperties) + \count($oldProperties))) {
+                    // For decimals defined.
+                    if (\in_array($commandType, ['float', 'decimal', 'double'])) {
+                        if (isset($nodeProperties['total'])) {
+                            $oldProperties['total'] = $nodeProperties['total'];
+                            $newProperties['total'] = $commandProperties['total'];
+                        }
+
+                        if (isset($nodeProperties['places'])) {
+                            $oldProperties['places'] = $nodeProperties['places'];
+                            $newProperties['places'] = $commandProperties['places'];
+                        }
+                    }
+
+                    if ((\count($newProperties) + \count($oldProperties)) > 0) {
                         $commands[] = new ChangeCommand($command->getTableName(), $commandType, $command->getAttname(),
                             $newProperties, $oldProperties);
                     }

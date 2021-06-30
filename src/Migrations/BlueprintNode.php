@@ -16,9 +16,7 @@ use Illuminate\Support\{
 use Illuminate\Database\Schema\{
     Blueprint, ColumnDefinition
 };
-use Laramore\Facades\{
-    Meta, Type
-};
+use Laramore\Facades\Meta;
 
 class BlueprintNode extends MetaNode
 {
@@ -102,18 +100,22 @@ class BlueprintNode extends MetaNode
         $type = $this->popFromColumn($column, 'type');
 
         // Here, if our field is an integer, we need to handle unsigned and increment integers.
-        if ($type === Type::get('integer')->getMigrationName()) {
+        if ($type === 'integer') {
             if ($column->unsigned) {
                 unset($column->unsigned);
 
-                $type = Type::get('unsigned_integer')->getMigrationName();
+                $type = 'unsigned_integer';
             }
 
             if ($column->autoIncrement) {
                 unset($column->autoIncrement);
 
-                $type = Type::get('increment')->getMigrationName();
+                $type = 'increments';
             }
+        }
+
+        if ($type === 'dateTime') { # Fix case.
+            return 'datetime';
         }
 
         return $type;

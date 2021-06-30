@@ -256,7 +256,7 @@ class MigrationManager implements LaramoreManager
         $this->migrator->requireFiles($this->migrationFiles);
 
         foreach ($this->migrationFiles as $migrationFile) {
-            $migration = $this->migrator->resolve($this->migrator->getMigrationType($migrationFile));
+            $migration = $this->migrator->resolve($this->migrator->getMigrationName($migrationFile));
 
             if (\method_exists($migration, 'up')) {
                 $migration->up();
