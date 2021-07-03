@@ -158,6 +158,7 @@ class MetaNode extends AbstractNode
             'fields' => [],
             'constraints' => [],
             'indexes' => [],
+            'self_constraints' => [],
         ];
 
         foreach ($fieldCommands as $command) {
@@ -165,7 +166,11 @@ class MetaNode extends AbstractNode
         }
 
         foreach ($constraintCommands as $command) {
-            $commands[($command instanceof IsADropCommand ? 'drop_constraints' : 'constraints')][] = $command;
+            if (! ($command instanceof IsADropCommand) && $command->getTableName() === $command->getProperties()['on']) {
+                $commands['self_constraints'][] = $command;
+            } else {
+                $commands[($command instanceof IsADropCommand ? 'drop_constraints' : 'constraints')][] = $command;
+            }
         }
 
         foreach ($indexCommands as $command) {
@@ -208,6 +213,7 @@ class MetaNode extends AbstractNode
             'fields' => [],
             'constraints' => [],
             'indexes' => [],
+            'self_constraints' => [],
         ];
 
         foreach ($fieldCommands as $command) {
@@ -215,7 +221,11 @@ class MetaNode extends AbstractNode
         }
 
         foreach ($constraintCommands as $command) {
-            $commands[($command instanceof IsADropCommand ? 'drop_constraints' : 'constraints')][] = $command;
+            if (! ($command instanceof IsADropCommand) && $command->getTableName() === $command->getProperties()['on']) {
+                $commands['self_constraints'][] = $command;
+            } else {
+                $commands[($command instanceof IsADropCommand ? 'drop_constraints' : 'constraints')][] = $command;
+            }
         }
 
         foreach ($indexCommands as $command) {
