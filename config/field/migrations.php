@@ -73,6 +73,18 @@ return [
             'nullable',
         ],
     ],
+    JsonList::class => [
+        'type' => 'json',
+        'property_keys' => [
+            'nullable',
+        ],
+    ],
+    JsonObject::class => [
+        'type' => 'json',
+        'property_keys' => [
+            'nullable',
+        ],
+    ],
     Password::class => [
         'type' => 'char',
         'property_keys' => [
