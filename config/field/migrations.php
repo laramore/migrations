@@ -26,7 +26,7 @@ return [
         ],
     ],
     Char::class => [
-        'type' => 'char',
+        'type' => 'string',
         'property_keys' => [
             'length:maxLength', 'nullable', 'default',
         ],
@@ -34,7 +34,7 @@ return [
     DateTime::class => [
         'type' => 'datetime',
         'property_keys' => [
-            'nullable', 'default',
+            'nullable', 'default', 'useCurrent',
         ],
     ],
     Decimal::class => [
@@ -44,7 +44,7 @@ return [
         ],
     ],
     Email::class => [
-        'type' => 'char',
+        'type' => 'string',
         'property_keys' => [
             'length:maxLength', 'nullable', 'default',
         ],
@@ -86,7 +86,7 @@ return [
         ],
     ],
     Password::class => [
-        'type' => 'char',
+        'type' => 'string',
         'property_keys' => [
             'length:maxLength', 'nullable', 'default',
         ],
@@ -96,7 +96,7 @@ return [
         'property_keys' => [],
     ],
     Pattern::class => [
-        'type' => 'char',
+        'type' => 'string',
         'property_keys' => [
             'length:maxLength', 'nullable', 'default',
         ],
