@@ -28,7 +28,7 @@ return [
     Char::class => [
         'type' => 'string',
         'property_keys' => [
-            'length:maxLength', 'nullable', 'default',
+            'length', 'nullable', 'default',
         ],
     ],
     DateTime::class => [
@@ -46,13 +46,19 @@ return [
     Email::class => [
         'type' => 'string',
         'property_keys' => [
-            'length:maxLength', 'nullable', 'default',
+            'length', 'nullable', 'default',
         ],
     ],
     Enum::class => [
         'type' => 'enum',
         'property_keys' => [
-            'allowed:values', 'length:maxLength', 'nullable', 'default:defaultValue',
+            'allowed:values', 'length', 'nullable', 'default:defaultValue',
+        ],
+    ],
+    Hashed::class => [
+        'type' => 'string',
+        'property_keys' => [
+            'length', 'nullable', 'default',
         ],
     ],
     Increment::class => [
@@ -88,7 +94,7 @@ return [
     Password::class => [
         'type' => 'string',
         'property_keys' => [
-            'length:maxLength', 'nullable', 'default',
+            'length', 'nullable', 'default',
         ],
     ],
     PrimaryId::class => [
@@ -98,7 +104,7 @@ return [
     Pattern::class => [
         'type' => 'string',
         'property_keys' => [
-            'length:maxLength', 'nullable', 'default',
+            'length', 'nullable', 'default',
         ],
     ],
     Text::class => [
