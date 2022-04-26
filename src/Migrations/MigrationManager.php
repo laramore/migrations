@@ -201,7 +201,7 @@ class MigrationManager implements LaramoreManager
                         'on' => $targetField->getMeta()->getTableName(),
                     ];
 
-                    $nodes[] = new Constraint($tableName, $sourceField->getNative(), $needs, $properties);
+                    $nodes[] = new Constraint($tableName, $sourceField->getNative(), $needs, $properties, $constraint->getName());
                 }
             } else if ($constraint instanceof IndexableConstraint && \in_array($type, BaseIndexableConstraint::$migrable) && $constraint->isComposed()) {
                 $nodes[] = new Index($tableName, $constraint->getConstraintType(), \array_map(function ($field) {

@@ -118,6 +118,13 @@ class Command extends AbstractCommand
             unset($properties['allowed']);
         }
 
+        // For constraints, add key name.
+        if (\in_array($this->type, ['foreign', 'unique', 'index', 'primary']) && isset($properties['name'])) {
+            $properties[$this->type][] = $properties['name'];
+
+            unset($properties['name']);
+        }
+
         // For decimals defined.
         if (\in_array($this->type, ['float', 'decimal', 'double'])) {
             if (isset($properties['total'])) {

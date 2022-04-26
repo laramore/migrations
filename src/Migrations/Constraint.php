@@ -20,6 +20,13 @@ class Constraint extends AbstractCommand
     protected $tableName;
 
     /**
+     * The constraint name.
+     *
+     * @var string
+     */
+    protected $name;
+
+    /**
      * Required fields.
      *
      * @var array
@@ -55,11 +62,16 @@ class Constraint extends AbstractCommand
      * @param array        $needs
      * @param array        $properties
      */
-    public function __construct(string $tableName, $attname, array $needs, array $properties)
+    public function __construct(string $tableName, $attname, array $needs, array $properties, string $name = null)
     {
         $this->tableName = $tableName;
         $this->needs = $needs;
-        $this->command = new $this->commandClass($tableName, $this->constraint, $attname, $properties);
+        $this->name = $name;
+
+        $this->command = new $this->commandClass($tableName, $this->constraint, $attname, array_merge(
+            $this->name ? ['name' => $this->name] : [],
+            $properties
+        ));
     }
 
     /**
@@ -145,7 +157,7 @@ class Constraint extends AbstractCommand
      */
     public function getIndexName(): string
     {
-        return \str_replace(['-', '.'], '_', \strtolower($this->getTableName().'_'.$this->getAttname().'_'.$this->constraint));
+        return $this->name ?: \str_replace(['-', '.'], '_', \strtolower($this->getTableName().'_'.$this->getAttname().'_'.$this->constraint));
     }
 
     /**
