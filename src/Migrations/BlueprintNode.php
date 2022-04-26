@@ -189,11 +189,6 @@ class BlueprintNode extends MetaNode
             $constraint = new Index($this->getTableName(), $type, $command->columns);
         }
 
-        // If the user defines itself the index name, it is required to put it.
-        if ($constraint->getIndexName() !== $index) {
-            $constraint->getCommand()->setProperty('index', $index);
-        }
-
         return $constraint;
     }
 }

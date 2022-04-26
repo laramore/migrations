@@ -395,6 +395,7 @@ class Node extends AbstractNode
                     $newProperties = $this->propertiesDiff($command->getProperties(), $nodeCommand->getProperties());
 
                     unset($nodes[$key]);
+                    unset($newProperties['name']); // Doctrine does not allow us to retrieve the constraint name.
 
                     // If they are changes, drop the last constraint and create the new one.
                     if ((\count($newProperties) + \count($oldProperties))) {
