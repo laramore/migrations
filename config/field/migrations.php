@@ -97,7 +97,7 @@ return [
             'length', 'nullable', 'default',
         ],
     ],
-    PrimaryId::class => [
+    PrimaryIncrement::class => [
         'type' => 'increments',
         'property_keys' => [],
     ],

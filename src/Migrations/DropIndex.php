@@ -24,6 +24,8 @@ class DropIndex extends Index implements IsADropCommand
      */
     public function __construct(string $tableName, string $type, string $key, Index $reversedIndex=null)
     {
+        $this->reversedIndex = $reversedIndex;
+
         parent::__construct($tableName, $type, []);
 
         $this->attname = $key;
@@ -42,7 +44,7 @@ class DropIndex extends Index implements IsADropCommand
      */
     public function getIndexName(): string
     {
-        return $this->getCommand()->getAttname();
+        return $this->reversedIndex->getIndexName();
     }
 
     /**

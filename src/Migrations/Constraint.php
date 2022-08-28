@@ -67,9 +67,10 @@ class Constraint extends AbstractCommand
         $this->tableName = $tableName;
         $this->needs = $needs;
         $this->name = $name;
+        $this->attname = $attname;
 
         $this->command = new $this->commandClass($tableName, $this->constraint, $attname, array_merge(
-            $this->name ? ['name' => $this->name] : [],
+            ['name' => $this->getIndexName()],
             $properties
         ));
     }
@@ -91,7 +92,7 @@ class Constraint extends AbstractCommand
      */
     public function getAttname()
     {
-        return $this->getCommand()->getAttname();
+        return $this->attname;
     }
 
     /**

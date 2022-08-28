@@ -19,7 +19,7 @@ class Index extends Constraint
      * @param string $type
      * @param array  $fields
      */
-    public function __construct(string $tableName, string $type, array $fields)
+    public function __construct(string $tableName, string $type, array $fields, string $name = null)
     {
         $this->constraint = $type;
         $needs = \array_map(function ($field) use ($tableName) {
@@ -29,7 +29,7 @@ class Index extends Constraint
             ];
         }, $fields);
 
-        parent::__construct($tableName, [$fields], $needs, []);
+        parent::__construct($tableName, [$fields], $needs, [], $name);
     }
 
     /**
@@ -39,7 +39,7 @@ class Index extends Constraint
      */
     public function getIndexName(): string
     {
-        return \str_replace(['-', '.'], '_', \implode('_', [
+        return $this->name ?: \str_replace(['-', '.'], '_', \implode('_', [
             \strtolower($this->getTableName()),
             \implode('_', $this->getAttname()[0]),
             $this->constraint,
@@ -53,7 +53,7 @@ class Index extends Constraint
      */
     public function getField(): string
     {
-        return $this->tableName.'.'.\implode('_', $this->getCommand()->getAttname()[0]).'_'.$this->constraint.'+';
+        return $this->tableName.'.'.\implode('_', $this->getAttname()[0]).'_'.$this->constraint.'+';
     }
 
     /**

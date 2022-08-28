@@ -167,7 +167,7 @@ class MigrationManager implements LaramoreManager
                     continue;
                 }
 
-                $command->setProperty($constraint->getConstraintType(), $constraint->hasName() ? $constraint->getName() : true);
+                $command->setProperty($constraint->getConstraintType(), $constraint->getName());
             }
         }
 
@@ -206,7 +206,7 @@ class MigrationManager implements LaramoreManager
             } else if ($constraint instanceof IndexableConstraint && \in_array($type, BaseIndexableConstraint::$migrable) && $constraint->isComposed()) {
                 $nodes[] = new Index($tableName, $constraint->getConstraintType(), \array_map(function ($field) {
                     return $field->getNative();
-                }, $constraint->getAttributes()));
+                }, $constraint->getAttributes()), $constraint->getName());
             }
         }
 
